@@ -10,11 +10,13 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.Set;
 
 @Entity
 @Table(name = "application_user")
+@DynamicUpdate
 public class User extends AbstractEntity {
 
     private String username;
@@ -27,9 +29,6 @@ public class User extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<Role> roles;
-//    @Lob
-//    @Column(length = 1000000)
-//    private byte[] profilePicture;
 
     public String getUsername() {
         return username;
@@ -55,13 +54,6 @@ public class User extends AbstractEntity {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
-//    public byte[] getProfilePicture() {
-//        return profilePicture;
-//    }
-//    public void setProfilePicture(byte[] profilePicture) {
-//        this.profilePicture = profilePicture;
-//    }
-
     public String getEmail() {
         return email;
     }

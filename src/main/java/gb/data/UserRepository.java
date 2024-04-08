@@ -3,6 +3,9 @@ package gb.data;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import javax.annotation.Nullable;
 
@@ -10,8 +13,12 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @Nullable
     User findByUsername(String username);
-    
+
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    @Query("SELECT u.username FROM User u WHERE u.email = :email")
+    String findUsernameByEmail(@Param("email") String email);
+
 }

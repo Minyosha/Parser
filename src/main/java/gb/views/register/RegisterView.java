@@ -3,7 +3,6 @@ package gb.views.register;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -49,7 +48,7 @@ public class RegisterView extends VerticalLayout {
                 currentUI.navigate("login");
             }
         });
-        loginButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        registerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         add(new H1(registerText),usernameField, nameField, emailField, passwordField, registerButton, loginButton);
     }
