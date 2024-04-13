@@ -15,7 +15,6 @@ import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility.AlignItems;
 import com.vaadin.flow.theme.lumo.LumoUtility.BoxSizing;
@@ -37,7 +36,6 @@ import gb.security.AuthenticatedUser;
 import gb.views.about.AboutView;
 import gb.views.admin.AdminView;
 import gb.views.projects.ProjectsView;
-import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
@@ -105,9 +103,6 @@ public class MainLayout extends AppLayout {
             User user = maybeUser.get();
 
             Avatar avatar = new Avatar(user.getName());
-//            StreamResource resource = new StreamResource("profile-pic",
-//                    () -> new ByteArrayInputStream(user.getProfilePicture()));
-//            avatar.setImageResource(resource);
             avatar.setThemeName("xsmall");
             avatar.getElement().setAttribute("tabindex", "-1");
 
@@ -156,7 +151,7 @@ public class MainLayout extends AppLayout {
         return new MenuItemInfo[]{ //
                 new MenuItemInfo("Projects", LineAwesomeIcon.PENCIL_RULER_SOLID.create(), ProjectsView.class), //
 
-                new MenuItemInfo("Admin", LineAwesomeIcon.USER_SOLID.create(), AdminView.class), //
+                new MenuItemInfo("Administration", LineAwesomeIcon.USER_SOLID.create(), AdminView.class), //
 
                 new MenuItemInfo("About", LineAwesomeIcon.QUESTION_SOLID.create(), AboutView.class), //
 

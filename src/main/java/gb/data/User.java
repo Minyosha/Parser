@@ -1,13 +1,11 @@
 package gb.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import org.hibernate.annotations.DynamicUpdate;
@@ -23,6 +21,7 @@ public class User extends AbstractEntity {
     private String name;
     @JsonIgnore
     private String hashedPassword;
+    private boolean banned;
 
     @Email
     private String email;
@@ -62,4 +61,10 @@ public class User extends AbstractEntity {
         this.email = email;
     }
 
+    public void setBanned(boolean banned) {
+        this.banned = banned;
+    }
+    public boolean isBanned() {
+        return banned;
+    }
 }

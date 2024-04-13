@@ -98,10 +98,9 @@ insert into sample_person(version, id,first_name,last_name,email,phone,date_of_b
 insert into sample_person(version, id,first_name,last_name,email,phone,date_of_birth,occupation,role,important) values (1, 98,'Earl','Giovannoni','earl.giovannoni@lojet.ge','(433) 862-3076','1988-04-08','Auto Service Station Attendant','Manager',false)
 insert into sample_person(version, id,first_name,last_name,email,phone,date_of_birth,occupation,role,important) values (1, 99,'Helen','Zanieri','helen.zanieri@ukve.tn','(619) 506-4452','1969-08-21','Healthcare Social Worker','External',false)
 insert into sample_person(version, id,first_name,last_name,email,phone,date_of_birth,occupation,role,important) values (1, 100,'Agnes','Toccafondi','agnes.toccafondi@viipo.ae','(616) 688-6883','1971-09-10','Comedian','External',false)
-insert into application_user (version, id, username,name,email,hashed_password) values (1, '1','user','John Normal','john@mail.com','$2a$10$xdbKoM48VySZqVSU/cSlVeJn0Z04XCZ7KZBjUBC00eKo5uLswyOpe')
+insert into application_user (version, id, username,name,email, banned, hashed_password) values (1, '1','user','John Normal','john@mail.com', false, '$2a$10$xdbKoM48VySZqVSU/cSlVeJn0Z04XCZ7KZBjUBC00eKo5uLswyOpe')
 insert into user_roles (user_id, roles) values ('1', 'USER')
-insert into application_user (version, id, username,name,email,hashed_password) values (1, '2','admin','Emma Executive','emma@mail.com','$2a$10$jpLNVNeA7Ar/ZQ2DKbKCm.MuT2ESe.Qop96jipKMq7RaUgCoQedV.')
-insert into user_roles (user_id, roles) values ('2', 'USER')
+insert into application_user (version, id, username,name,email, banned, hashed_password) values (1, '2','admin','Emma Executive','emma@mail.com', false, '$2a$10$jpLNVNeA7Ar/ZQ2DKbKCm.MuT2ESe.Qop96jipKMq7RaUgCoQedV.')
 insert into user_roles (user_id, roles) values ('2', 'ADMIN')
 
 

@@ -2,8 +2,11 @@ package gb.services;
 
 import gb.data.SamplePerson;
 import gb.data.SamplePersonRepository;
+
+import java.util.Collection;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -41,4 +44,9 @@ public class SamplePersonService {
         return (int) repository.count();
     }
 
+    public Page<SamplePerson> findByFirstNameAndEmail(String firstName, String email, Pageable pageable) {
+        // Здесь должна быть логика для поиска SamplePerson по имени и email
+        // Это может быть запрос к базе данных, который фильтрует записи по этим параметрам
+        return repository.findByFirstNameContainingAndEmailContaining(firstName, email, pageable);
+    }
 }

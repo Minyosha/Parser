@@ -23,10 +23,10 @@ import java.util.Set;
 @AnonymousAllowed
 public class RegisterView extends VerticalLayout {
 
-    private TextField nameField = new TextField("Name");
-    private TextField usernameField = new TextField("Username");
-    private PasswordField passwordField = new PasswordField("Password");
-    private EmailField emailField = new EmailField("Email");
+    private TextField nameField = new TextField("Name", "Ivan Petrov");
+    private TextField usernameField = new TextField("Username", "Your login");
+    private PasswordField passwordField = new PasswordField("Password", "Your password");
+    private EmailField emailField = new EmailField("Email", "Your email");
     private Button registerButton = new Button("Register account");
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
@@ -81,6 +81,7 @@ public class RegisterView extends VerticalLayout {
         newUser.setName(name);
         newUser.setHashedPassword(passwordEncoder.encode(password));
         newUser.setRoles(Set.of(Role.USER)); // или любую другую роль по умолчанию
+        newUser.setBanned(false);
         userRepository.save(newUser);
 
         // После успешной регистрации перенаправляем на страницу успеха

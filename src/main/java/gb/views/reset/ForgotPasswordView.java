@@ -21,7 +21,7 @@ import java.security.SecureRandom;
 @JsModule("./scripts/copytoclipboard.js")
 public class ForgotPasswordView extends VerticalLayout {
     private EmailField emailField = new EmailField("Email");
-    private Button resetButton = new Button("Reset password");
+    private Button resetButton = new Button("Generate");
     private UserRepository userRepository;
 
 

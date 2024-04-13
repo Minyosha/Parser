@@ -7,6 +7,7 @@ import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import gb.data.User;
 import gb.data.UserRepository;
 import gb.security.AuthenticatedUser;
 
@@ -52,7 +53,13 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         if (authenticatedUser.get().isPresent()) {
-            event.forwardTo("about-view");
+            User user = authenticatedUser.get().get();
+            if (user.getRoles().stream().anyMatch(role -> role.name().equals("ADMIN"))) {
+                event.forwardTo("admin-view");
+            } else {
+                event.forwardTo("about-view");
+            }
+
         } else {
             if (event.getLocation().getQueryParameters().getParameters().containsKey("error")) {
                 login.setError(true);
