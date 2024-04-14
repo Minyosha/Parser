@@ -128,6 +128,25 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
             }
         });
 
+        deleteUserButton.addClickListener(event -> {
+            User selectedUser = stripedGrid.asSingleSelect().getValue();
+            if (selectedUser != null) {
+                // Получение последней версии пользователя из базы данных
+                User userToDelete = userService.findById(selectedUser.getId());
+                if (userToDelete != null) {
+                    // Удаление пользователя
+                    userService.delete(userToDelete.getId());
+                    // Обновление таблицы
+                    stripedGrid.getDataProvider().refreshAll();
+                    Notification notification = new Notification("User " + userToDelete.getUsername() + " deleted", 3000);
+                    notification.setPosition(Notification.Position.MIDDLE);
+                    notification.open();
+                } else {
+                    // Пользователь не найден, обработка ошибки
+                }
+            }
+        });
+
         // Create a row layout, add the column layout and the grid to it
         HorizontalLayout layoutRow = new HorizontalLayout();
         layoutRow.setHeightFull();
