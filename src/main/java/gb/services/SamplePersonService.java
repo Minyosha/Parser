@@ -5,6 +5,8 @@ import gb.data.SamplePersonRepository;
 
 import java.util.Collection;
 import java.util.Optional;
+
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class SamplePersonService {
 
     private final SamplePersonRepository repository;

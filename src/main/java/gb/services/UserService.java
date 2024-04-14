@@ -3,6 +3,8 @@ package gb.services;
 import gb.data.User;
 import gb.data.UserRepository;
 import java.util.Optional;
+
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -12,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class UserService {
 
     private final UserRepository repository;
@@ -44,4 +47,7 @@ public class UserService {
         return (int) repository.count();
     }
 
+    public User findById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
 }

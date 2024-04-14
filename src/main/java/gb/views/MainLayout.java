@@ -43,6 +43,8 @@ import org.vaadin.lineawesome.LineAwesomeIcon;
  * The main view is a top-level placeholder for other views.
  */
 public class MainLayout extends AppLayout {
+    private AuthenticatedUser authenticatedUser;
+    private AccessAnnotationChecker accessChecker;
 
     /**
      * A simple navigation item component, based on ListItem element.
@@ -76,8 +78,7 @@ public class MainLayout extends AppLayout {
 
     }
 
-    private AuthenticatedUser authenticatedUser;
-    private AccessAnnotationChecker accessChecker;
+
 
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
         this.authenticatedUser = authenticatedUser;
