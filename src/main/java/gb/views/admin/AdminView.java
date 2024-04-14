@@ -3,10 +3,10 @@ package gb.views.admin;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.charts.model.Select;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -20,7 +20,6 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import gb.data.SamplePerson;
 import gb.data.User;
 import gb.data.UserRepository;
@@ -55,6 +54,14 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         rolesTextField.setReadOnly(true);
         TextField emailTextField = new TextField("E-mail");
 
+        // Create headings
+        H5 h5UserDetails = new H5();
+        h5UserDetails.setText("User details:");
+        H5 h5Users = new H5();
+        h5Users.setText("Users:");
+        H5 h5UserProjects = new H5();
+        h5UserProjects.setText("User projects:");
+
         // Create the primary button
         Button updateUserButton = new Button("Update user");
         updateUserButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -74,31 +81,31 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         bannedRadioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
 
         // Create the grid, set it to take full height and full width
-        Grid<User> stripedGrid = new Grid<>(User.class);
-        stripedGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        stripedGrid.setHeightFull();
-        stripedGrid.setWidthFull();
+        Grid<User> stripedGridUsers = new Grid<>(User.class);
+        stripedGridUsers.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        stripedGridUsers.setHeightFull();
+        stripedGridUsers.setWidthFull();
 
         // Create the grid, set it to take full height and full width
-        Grid<SamplePerson> stripedGridNext = new Grid<>(SamplePerson.class);
-        stripedGridNext.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        stripedGridNext.setHeightFull();
-        stripedGridNext.setWidthFull();
+        Grid<SamplePerson> stripedGridUserProjects = new Grid<>(SamplePerson.class);
+        stripedGridUserProjects.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        stripedGridUserProjects.setHeightFull();
+        stripedGridUserProjects.setWidthFull();
 
         // Create a column layout for the text fields and buttons
         VerticalLayout layoutColumnLeft = new VerticalLayout();
         layoutColumnLeft.setWidth(null); // Width is determined by the widest component
-        layoutColumnLeft.add(idTextField, bannedRadioGroup, usernameTextField, nameTextField, rolesTextField, emailTextField, updateUserButton, deleteUserButton);
+        layoutColumnLeft.add(h5UserDetails, idTextField, bannedRadioGroup, usernameTextField, nameTextField, rolesTextField, emailTextField, updateUserButton, deleteUserButton);
         layoutColumnLeft.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
 
         // Create a column layout for tables
         VerticalLayout layoutColumnRight = new VerticalLayout();
         layoutColumnRight.setWidth(null); // Width is determined by the widest component
-        layoutColumnRight.add(stripedGrid, stripedGridNext);
+        layoutColumnRight.add(h5Users, stripedGridUsers, h5UserProjects, stripedGridUserProjects);
         layoutColumnRight.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
 
         // Add the grid to the layout
-        stripedGrid.asSingleSelect().addValueChangeListener(event -> {
+        stripedGridUsers.asSingleSelect().addValueChangeListener(event -> {
             User selectedUser = event.getValue();
             if (selectedUser != null) {
                 idTextField.setValue(selectedUser.getId().toString());
@@ -116,7 +123,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         });
 
         updateUserButton.addClickListener(event -> {
-            User selectedUser = stripedGrid.asSingleSelect().getValue();
+            User selectedUser = stripedGridUsers.asSingleSelect().getValue();
             if (selectedUser != null) {
                 // Получение последней версии пользователя из базы данных
                 User userToUpdate = userService.findById(selectedUser.getId());
@@ -132,7 +139,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                     userService.update(userToUpdate);
 
                     // Обновление таблицы
-                    stripedGrid.getDataProvider().refreshItem(userToUpdate);
+                    stripedGridUsers.getDataProvider().refreshItem(userToUpdate);
                     Notification notification = new Notification("User " + userToUpdate.getUsername() + " updated", 3000);
                     notification.setPosition(Notification.Position.MIDDLE);
                     notification.open();
@@ -143,7 +150,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         });
 
         deleteUserButton.addClickListener(event -> {
-            User selectedUser = stripedGrid.asSingleSelect().getValue();
+            User selectedUser = stripedGridUsers.asSingleSelect().getValue();
             if (selectedUser != null) {
                 // Получение последней версии пользователя из базы данных
                 User userToDelete = userService.findById(selectedUser.getId());
@@ -151,7 +158,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                     // Удаление пользователя
                     userService.delete(userToDelete.getId());
                     // Обновление таблицы
-                    stripedGrid.getDataProvider().refreshAll();
+                    stripedGridUsers.getDataProvider().refreshAll();
                     Notification notification = new Notification("User " + userToDelete.getUsername() + " deleted", 3000);
                     notification.setPosition(Notification.Position.MIDDLE);
                     notification.open();
@@ -183,9 +190,9 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         getContent().setWidth("100%");
 
         // Populate the grid with data
-        setGridUserData(stripedGrid);
+        setGridUserData(stripedGridUsers);
 
-        setGridProjectData(stripedGridNext);
+        setGridProjectData(stripedGridUserProjects);
     }
 
     private void setGridUserData(Grid grid) {
