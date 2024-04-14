@@ -40,6 +40,8 @@ import org.springframework.data.domain.PageRequest;
 public class AdminView extends Composite<VerticalLayout> implements BeforeEnterObserver {
     private final AuthenticatedUser authenticatedUser;
     private UserRepository userRepository;
+    @Autowired()
+    private SamplePersonService samplePersonService;
     public AdminView(AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser; // Set the authenticated user
 
@@ -71,17 +73,29 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         bannedRadioGroup.setItems("Yes", "No");
         bannedRadioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
 
-        // Create a column layout for the text fields and buttons
-        VerticalLayout layoutColumn2 = new VerticalLayout();
-        layoutColumn2.setWidth(null); // Width is determined by the widest component
-        layoutColumn2.add(idTextField, bannedRadioGroup, usernameTextField, nameTextField, rolesTextField, emailTextField, updateUserButton, deleteUserButton);
-        layoutColumn2.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
-
         // Create the grid, set it to take full height and full width
         Grid<User> stripedGrid = new Grid<>(User.class);
         stripedGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         stripedGrid.setHeightFull();
         stripedGrid.setWidthFull();
+
+        // Create the grid, set it to take full height and full width
+        Grid<SamplePerson> stripedGridNext = new Grid<>(SamplePerson.class);
+        stripedGridNext.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        stripedGridNext.setHeightFull();
+        stripedGridNext.setWidthFull();
+
+        // Create a column layout for the text fields and buttons
+        VerticalLayout layoutColumnLeft = new VerticalLayout();
+        layoutColumnLeft.setWidth(null); // Width is determined by the widest component
+        layoutColumnLeft.add(idTextField, bannedRadioGroup, usernameTextField, nameTextField, rolesTextField, emailTextField, updateUserButton, deleteUserButton);
+        layoutColumnLeft.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
+
+        // Create a column layout for tables
+        VerticalLayout layoutColumnRight = new VerticalLayout();
+        layoutColumnRight.setWidth(null); // Width is determined by the widest component
+        layoutColumnRight.add(stripedGrid, stripedGridNext);
+        layoutColumnRight.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
 
         // Add the grid to the layout
         stripedGrid.asSingleSelect().addValueChangeListener(event -> {
@@ -151,13 +165,13 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         HorizontalLayout layoutRow = new HorizontalLayout();
         layoutRow.setHeightFull();
         layoutRow.setWidthFull();
-        layoutRow.add(layoutColumn2, stripedGrid);
-        layoutRow.setFlexGrow(0, layoutColumn2); // Column layout does not grow
-        layoutRow.setFlexGrow(1, stripedGrid); // Grid takes the remaining space
+        layoutRow.add(layoutColumnLeft, layoutColumnRight);
+        layoutRow.setFlexGrow(0, layoutColumnLeft); // Column layout does not grow
+        layoutRow.setFlexGrow(1, layoutColumnRight); // Grid takes the remaining space
 
         // Ensure the button column doesn't grow and the grid takes the remaining space
-        layoutRow.setFlexGrow(0, layoutColumn2);
-        layoutRow.setFlexGrow(1, stripedGrid);
+        layoutRow.setFlexGrow(0, layoutColumnLeft);
+        layoutRow.setFlexGrow(1, layoutColumnRight);
 
         // Configure the content layout, add the row layout to it, and set it to take full size
         getContent().setSizeFull();
@@ -169,10 +183,12 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         getContent().setWidth("100%");
 
         // Populate the grid with data
-        setGridSampleData(stripedGrid);
+        setGridUserData(stripedGrid);
+
+        setGridProjectData(stripedGridNext);
     }
 
-    private void setGridSampleData(Grid grid) {
+    private void setGridUserData(Grid grid) {
         grid.setItems(query -> userService.list(
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
@@ -180,10 +196,15 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         grid.setColumns("id", "banned", "username", "name", "roles", "email");
     }
 
+    private void setGridProjectData(Grid grid) {
+        grid.setItems(query -> samplePersonService.list(
+                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+                .stream());
+    }
 
 
-    @Autowired()
-    private SamplePersonService samplePersonService;
+
+
 
 
 
@@ -206,8 +227,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
 //                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
 //                .stream());
 //
-//        grid.setColumns("id", "banned", "username", "name", "roles", "email");
-//
+//        grid.setColumns("id", "banned", "username", "name", "roles", "email");/
 //
 //
 //    }
