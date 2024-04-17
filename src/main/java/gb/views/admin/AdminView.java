@@ -33,6 +33,7 @@ import gb.services.UserService;
 import gb.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
@@ -230,7 +231,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
 
 
 
-
+// типо говно
     private void setGridUserData(Grid<User> grid) {
         // Initialize filterValues with empty strings for each column
         grid.getColumns().forEach(column -> filterValues.add(""));
@@ -245,7 +246,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         HeaderRow filterRow = grid.appendHeaderRow();
 
         // Create a filter field for each column and add a value change listener
-        grid.getColumns().forEach(column -> {
+        for (Grid.Column<User> column : grid.getColumns()) {
             if ("banned".equals(column.getKey()) || "roles".equals(column.getKey())) {
                 ComboBox<String> filterComboBox = new ComboBox<>();
                 if ("banned".equals(column.getKey())) {
@@ -259,10 +260,9 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                     String selectedValue = filterComboBox.getValue() != null ? filterComboBox.getValue() : "";
                     filterValues.set(grid.getColumns().indexOf(column), selectedValue); // Save the filter value
                     grid.setItems(query -> userService.filteredList(
-                                    filterValues.get(grid.getColumns().indexOf(column)), column.getKey(),
+                                    filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-                    grid.getDataProvider().refreshAll(); // Refresh the grid data
                     System.out.println(filterValues); // Print the filterValues list
                 });
                 filterComboBox.setSizeFull();
@@ -273,17 +273,16 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 filterField.addValueChangeListener(event -> {
                     filterValues.set(grid.getColumns().indexOf(column), filterField.getValue()); // Save the filter value
                     grid.setItems(query -> userService.filteredList(
-                                    filterValues.get(grid.getColumns().indexOf(column)), column.getKey(),
+                                    filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-                    grid.getDataProvider().refreshAll(); // Refresh the grid data
                     System.out.println(filterValues); // Print the filterValues list
                 });
                 filterField.setSizeFull();
                 filterField.setPlaceholder("Filter");
                 filterRow.getCell(column).setComponent(filterField);
             }
-        });
+        }
     }
 
     private void setGridProjectData(Grid grid) {
