@@ -36,10 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -54,6 +51,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
     private SamplePersonService samplePersonService;
     @Autowired
     private UserService userService;
+    private List<String> filterValues = new ArrayList<>();
     public AdminView(AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser; // Set the authenticated user
         this.userService = userService;
@@ -229,7 +227,14 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
 
 
 
+
+
+
+
     private void setGridUserData(Grid<User> grid) {
+        // Initialize filterValues with empty strings for each column
+        grid.getColumns().forEach(column -> filterValues.add(""));
+
         grid.setItems(query -> userService.list(
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
@@ -252,11 +257,13 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 filterComboBox.setClearButtonVisible(true);
                 filterComboBox.addValueChangeListener(event -> {
                     String selectedValue = filterComboBox.getValue() != null ? filterComboBox.getValue() : "";
+                    filterValues.set(grid.getColumns().indexOf(column), selectedValue); // Save the filter value
                     grid.setItems(query -> userService.filteredList(
-                                    selectedValue, column.getKey(),
+                                    filterValues.get(grid.getColumns().indexOf(column)), column.getKey(),
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
                     grid.getDataProvider().refreshAll(); // Refresh the grid data
+                    System.out.println(filterValues); // Print the filterValues list
                 });
                 filterComboBox.setSizeFull();
                 filterRow.getCell(column).setComponent(filterComboBox);
@@ -264,11 +271,13 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 TextField filterField = new TextField();
                 filterField.setValueChangeMode(ValueChangeMode.EAGER);
                 filterField.addValueChangeListener(event -> {
+                    filterValues.set(grid.getColumns().indexOf(column), filterField.getValue()); // Save the filter value
                     grid.setItems(query -> userService.filteredList(
-                                    filterField.getValue(), column.getKey(),
+                                    filterValues.get(grid.getColumns().indexOf(column)), column.getKey(),
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
                     grid.getDataProvider().refreshAll(); // Refresh the grid data
+                    System.out.println(filterValues); // Print the filterValues list
                 });
                 filterField.setSizeFull();
                 filterField.setPlaceholder("Filter");
@@ -282,6 +291,130 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
     }
+
+
+
+
+
+
+
+
+
+// с сохранением в лист
+//    private void setGridUserData(Grid<User> grid) {
+//        // Initialize filterValues with empty strings for each column
+//        grid.getColumns().forEach(column -> filterValues.add(""));
+//
+//        grid.setItems(query -> userService.list(
+//                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+//                .stream());
+//
+//        grid.setColumns("id", "banned", "username", "name", "roles", "email");
+//
+//        // Create a header row for filters
+//        HeaderRow filterRow = grid.appendHeaderRow();
+//
+//        // Create a filter field for each column and add a value change listener
+//        grid.getColumns().forEach(column -> {
+//            if ("banned".equals(column.getKey()) || "roles".equals(column.getKey())) {
+//                ComboBox<String> filterComboBox = new ComboBox<>();
+//                if ("banned".equals(column.getKey())) {
+//                    filterComboBox.setItems("true", "false");
+//                } else if ("roles".equals(column.getKey())) {
+//                    filterComboBox.setItems(Role.USER.toString(), Role.ADMIN.toString());
+//                }
+//                filterComboBox.setPlaceholder("Select");
+//                filterComboBox.setClearButtonVisible(true);
+//                filterComboBox.addValueChangeListener(event -> {
+//                    String selectedValue = filterComboBox.getValue() != null ? filterComboBox.getValue() : "";
+//                    grid.setItems(query -> userService.filteredList(
+//                                    selectedValue, column.getKey(),
+//                                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+//                            .stream());
+//                    grid.getDataProvider().refreshAll(); // Refresh the grid data
+//                    filterValues.set(grid.getColumns().indexOf(column), selectedValue); // Save the filter value
+//                    System.out.println(filterValues); // Print the filterValues list
+//                });
+//                filterComboBox.setSizeFull();
+//                filterRow.getCell(column).setComponent(filterComboBox);
+//            } else {
+//                TextField filterField = new TextField();
+//                filterField.setValueChangeMode(ValueChangeMode.EAGER);
+//                filterField.addValueChangeListener(event -> {
+//                    grid.setItems(query -> userService.filteredList(
+//                                    filterField.getValue(), column.getKey(),
+//                                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+//                            .stream());
+//                    grid.getDataProvider().refreshAll(); // Refresh the grid data
+//                    filterValues.set(grid.getColumns().indexOf(column), filterField.getValue()); // Save the filter value
+//                    System.out.println(filterValues); // Print the filterValues list
+//                });
+//                filterField.setSizeFull();
+//                filterField.setPlaceholder("Filter");
+//                filterRow.getCell(column).setComponent(filterField);
+//            }
+//        });
+//    }
+
+
+
+
+
+//    private void setGridUserData(Grid<User> grid) {
+//        grid.setItems(query -> userService.list(
+//                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+//                .stream());
+//
+//        grid.setColumns("id", "banned", "username", "name", "roles", "email");
+//
+//        // Create a header row for filters
+//        HeaderRow filterRow = grid.appendHeaderRow();
+//
+//        // Create a filter field for each column and add a value change listener
+//        grid.getColumns().forEach(column -> {
+//            if ("banned".equals(column.getKey()) || "roles".equals(column.getKey())) {
+//                ComboBox<String> filterComboBox = new ComboBox<>();
+//                if ("banned".equals(column.getKey())) {
+//                    filterComboBox.setItems("true", "false");
+//                } else if ("roles".equals(column.getKey())) {
+//                    filterComboBox.setItems(Role.USER.toString(), Role.ADMIN.toString());
+//                }
+//                filterComboBox.setPlaceholder("Select");
+//                filterComboBox.setClearButtonVisible(true);
+//                filterComboBox.addValueChangeListener(event -> {
+//                    String selectedValue = filterComboBox.getValue() != null ? filterComboBox.getValue() : "";
+//                    grid.setItems(query -> userService.filteredList(
+//                                    selectedValue, column.getKey(),
+//                                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+//                            .stream());
+//                    grid.getDataProvider().refreshAll(); // Refresh the grid data
+//                });
+//                filterComboBox.setSizeFull();
+//                filterRow.getCell(column).setComponent(filterComboBox);
+//            } else {
+//                TextField filterField = new TextField();
+//                filterField.setValueChangeMode(ValueChangeMode.EAGER);
+//                filterField.addValueChangeListener(event -> {
+//                    grid.setItems(query -> userService.filteredList(
+//                                    filterField.getValue(), column.getKey(),
+//                                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+//                            .stream());
+//                    grid.getDataProvider().refreshAll(); // Refresh the grid data
+//                });
+//                filterField.setSizeFull();
+//                filterField.setPlaceholder("Filter");
+//                filterRow.getCell(column).setComponent(filterField);
+//            }
+//        });
+//    }
+
+
+    //старый вариант
+//    private void setGridProjectData(Grid grid) {
+//        grid.setItems(query -> samplePersonService.list(
+//                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+//                .stream());
+//    }
 
 
     public void beforeEnter(BeforeEnterEvent event) {
