@@ -33,12 +33,9 @@ import gb.services.UserService;
 import gb.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @PageTitle("Administration")
@@ -53,6 +50,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
     @Autowired
     private UserService userService;
     private List<String> filterValues = new ArrayList<>();
+
     public AdminView(AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser; // Set the authenticated user
         this.userService = userService;
@@ -60,7 +58,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         // Create the text fields
         TextField idTextField = new TextField("id");
         idTextField.setReadOnly(true);
-//        idTextField.setValue("id");
         TextField usernameTextField = new TextField("Username");
         TextField nameTextField = new TextField("Name");
         TextField rolesTextField = new TextField("Roles");
@@ -128,10 +125,8 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 emailTextField.setValue(selectedUser.getEmail());
                 bannedRadioGroup.setValue(selectedUser.isBanned() ? "Yes" : "No");
 
-                // Здесь вы можете добавить код для установки значений в другие текстовые поля
             } else {
                 idTextField.clear();
-                // Очистите значения других текстовых полей при отмене выбора
             }
         });
 
@@ -144,7 +139,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                     // Обновление данных пользователя
                     userToUpdate.setUsername(usernameTextField.getValue());
                     userToUpdate.setName(nameTextField.getValue());
-//                    userToUpdate.setRoles(rolesTextField.getValue()); // Это может потребовать конвертации
                     userToUpdate.setEmail(emailTextField.getValue());
                     userToUpdate.setBanned("Yes".equals(bannedRadioGroup.getValue()));
 
@@ -188,6 +182,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                         notification.open();
                     } else {
                         // Пользователь не найден, обработка ошибки
+                        Notification notification = new Notification("User with ID " + selectedUser.getId() + " not found", 3000);
                     }
                 }
             }
@@ -225,13 +220,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
     }
 
 
-
-
-
-
-
-
-// типо говно
     private void setGridUserData(Grid<User> grid) {
         // Initialize filterValues with empty strings for each column
         grid.getColumns().forEach(column -> filterValues.add(""));
@@ -260,7 +248,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-//                    System.out.println(filterValues); // Print the filterValues list
                 });
                 idField.setSizeFull();
                 idField.setPlaceholder("Filter by ID");
@@ -281,7 +268,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-//                    System.out.println(filterValues); // Print the filterValues list
                 });
                 filterComboBox.setSizeFull();
                 filterRow.getCell(column).setComponent(filterComboBox);
@@ -294,7 +280,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-//                    System.out.println(filterValues); // Print the filterValues list
                 });
                 filterField.setSizeFull();
                 filterField.setPlaceholder("Filter");
@@ -308,7 +293,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
     }
-
 
 
     public void beforeEnter(BeforeEnterEvent event) {
