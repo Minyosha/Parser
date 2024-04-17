@@ -3,9 +3,11 @@ package gb.views.admin;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
@@ -15,11 +17,13 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
+import gb.data.Role;
 import gb.data.SamplePerson;
 import gb.data.User;
 import gb.data.UserRepository;
@@ -30,6 +34,13 @@ import gb.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @PageTitle("Administration")
@@ -41,8 +52,11 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
     private UserRepository userRepository;
     @Autowired()
     private SamplePersonService samplePersonService;
+    @Autowired
+    private UserService userService;
     public AdminView(AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser; // Set the authenticated user
+        this.userService = userService;
 
         // Create the text fields
         TextField idTextField = new TextField("id");
@@ -149,21 +163,33 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
             }
         });
 
+
         deleteUserButton.addClickListener(event -> {
             User selectedUser = stripedGridUsers.asSingleSelect().getValue();
+
+            // Идентификатор текущего пользователя
+            Long currentUserId = getCurrentUserId(); // Замените этот метод на ваш способ получения ID текущего пользователя
+
             if (selectedUser != null) {
-                // Получение последней версии пользователя из базы данных
-                User userToDelete = userService.findById(selectedUser.getId());
-                if (userToDelete != null) {
-                    // Удаление пользователя
-                    userService.delete(userToDelete.getId());
-                    // Обновление таблицы
-                    stripedGridUsers.getDataProvider().refreshAll();
-                    Notification notification = new Notification("User " + userToDelete.getUsername() + " deleted", 3000);
+                if (selectedUser.getId().equals(currentUserId)) {
+                    // Попытка удаления самого себя, отображаем уведомление
+                    Notification notification = new Notification("You cannot delete your own account", 3000);
                     notification.setPosition(Notification.Position.MIDDLE);
                     notification.open();
                 } else {
-                    // Пользователь не найден, обработка ошибки
+                    // Получение последней версии пользователя из базы данных
+                    User userToDelete = userService.findById(selectedUser.getId());
+                    if (userToDelete != null) {
+                        // Удаление пользователя
+                        userService.delete(userToDelete.getId());
+                        // Обновление таблицы
+                        stripedGridUsers.getDataProvider().refreshAll();
+                        Notification notification = new Notification("User " + userToDelete.getUsername() + " deleted", 3000);
+                        notification.setPosition(Notification.Position.MIDDLE);
+                        notification.open();
+                    } else {
+                        // Пользователь не найден, обработка ошибки
+                    }
                 }
             }
         });
@@ -195,12 +221,60 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         setGridProjectData(stripedGridUserProjects);
     }
 
-    private void setGridUserData(Grid grid) {
+    private Long getCurrentUserId() {
+        return authenticatedUser.get().map(User::getId).orElse(null);
+    }
+
+
+
+
+
+    private void setGridUserData(Grid<User> grid) {
         grid.setItems(query -> userService.list(
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
 
         grid.setColumns("id", "banned", "username", "name", "roles", "email");
+
+        // Create a header row for filters
+        HeaderRow filterRow = grid.appendHeaderRow();
+
+        // Create a filter field for each column and add a value change listener
+        grid.getColumns().forEach(column -> {
+            if ("banned".equals(column.getKey()) || "roles".equals(column.getKey())) {
+                ComboBox<String> filterComboBox = new ComboBox<>();
+                if ("banned".equals(column.getKey())) {
+                    filterComboBox.setItems("true", "false");
+                } else if ("roles".equals(column.getKey())) {
+                    filterComboBox.setItems(Role.USER.toString(), Role.ADMIN.toString());
+                }
+                filterComboBox.setPlaceholder("Select");
+                filterComboBox.setClearButtonVisible(true);
+                filterComboBox.addValueChangeListener(event -> {
+                    String selectedValue = filterComboBox.getValue() != null ? filterComboBox.getValue() : "";
+                    grid.setItems(query -> userService.filteredList(
+                                    selectedValue, column.getKey(),
+                                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+                            .stream());
+                    grid.getDataProvider().refreshAll(); // Refresh the grid data
+                });
+                filterComboBox.setSizeFull();
+                filterRow.getCell(column).setComponent(filterComboBox);
+            } else {
+                TextField filterField = new TextField();
+                filterField.setValueChangeMode(ValueChangeMode.EAGER);
+                filterField.addValueChangeListener(event -> {
+                    grid.setItems(query -> userService.filteredList(
+                                    filterField.getValue(), column.getKey(),
+                                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+                            .stream());
+                    grid.getDataProvider().refreshAll(); // Refresh the grid data
+                });
+                filterField.setSizeFull();
+                filterField.setPlaceholder("Filter");
+                filterRow.getCell(column).setComponent(filterField);
+            }
+        });
     }
 
     private void setGridProjectData(Grid grid) {
@@ -209,60 +283,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 .stream());
     }
 
-
-
-
-
-
-
-
-
-//    public AdminView(AuthenticatedUser authenticatedUser) {
-//        this.authenticatedUser = authenticatedUser;
-//        Grid multiSelectGrid = new Grid(User.class);
-//        getContent().setWidth("100%");
-//        getContent().getStyle().set("flex-grow", "1");
-//        multiSelectGrid.setSelectionMode(Grid.SelectionMode.MULTI);
-//        multiSelectGrid.setWidth("100%");
-//        multiSelectGrid.getStyle().set("flex-grow", "0");
-//        setGridSampleData(multiSelectGrid);
-//        getContent().add(multiSelectGrid);
-//    }
-//
-//    private void setGridSampleData(Grid grid) {
-//        grid.setItems(query -> userService.list(
-//                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
-//                .stream());
-//
-//        grid.setColumns("id", "banned", "username", "name", "roles", "email");/
-//
-//
-//    }
-
-//    private void setGridSampleData(Grid<User> grid) {
-//        grid.setItems(query -> userService.list(
-//                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
-//                .stream());
-//
-//        grid.addColumn(User::getId).setHeader("ID");
-//        grid.addColumn(User::getUsername).setHeader("Username");
-//        grid.addColumn(User::getName).setHeader("Name");
-//        grid.addColumn(User::getRoles).setHeader("Roles");
-//        grid.addColumn(User::getEmail).setHeader("Email");
-//
-//        grid.addColumn(new ComponentRenderer<>(user -> {
-//            Checkbox checkbox = new Checkbox();
-//            checkbox.setValue(user.isBanned());
-//            checkbox.addValueChangeListener(event -> {
-//                user.setBanned(checkbox.getValue());
-//                userRepository.save(user); // Сохранение изменений
-//            });
-//            return checkbox;
-//        })).setHeader("Banned");
-//    }
-
-    @Autowired()
-    private UserService userService;
 
     public void beforeEnter(BeforeEnterEvent event) {
         if (authenticatedUser.get().isPresent()) {
