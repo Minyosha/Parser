@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.Uses;
+import com.vaadin.flow.component.grid.AbstractGridSingleSelectionModel;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -23,22 +24,16 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import gb.data.Role;
-import gb.data.SamplePerson;
-import gb.data.User;
-import gb.data.UserRepository;
+import gb.data.*;
 import gb.security.AuthenticatedUser;
-import gb.services.SamplePersonService;
+import gb.services.ProjectsService;
 import gb.services.UserService;
 import gb.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @PageTitle("Administration")
@@ -47,12 +42,20 @@ import java.util.stream.Collectors;
 @Uses(Icon.class)
 public class AdminView extends Composite<VerticalLayout> implements BeforeEnterObserver {
     private final AuthenticatedUser authenticatedUser;
+
     private UserRepository userRepository;
-    @Autowired()
-    private SamplePersonService samplePersonService;
+
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ProjectsService sampleProjectService;
+
     private List<String> filterValues = new ArrayList<>();
+
+    User selectedUser = null;
+    private AbstractGridSingleSelectionModel<Object> stripedGridUsers;
+
     public AdminView(AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser; // Set the authenticated user
         this.userService = userService;
@@ -60,7 +63,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         // Create the text fields
         TextField idTextField = new TextField("id");
         idTextField.setReadOnly(true);
-//        idTextField.setValue("id");
         TextField usernameTextField = new TextField("Username");
         TextField nameTextField = new TextField("Name");
         TextField rolesTextField = new TextField("Roles");
@@ -99,11 +101,11 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         stripedGridUsers.setHeightFull();
         stripedGridUsers.setWidthFull();
 
-        // Create the grid, set it to take full height and full width
-        Grid<SamplePerson> stripedGridUserProjects = new Grid<>(SamplePerson.class);
+        Grid<Projects> stripedGridUserProjects = new Grid<>(Projects.class);
         stripedGridUserProjects.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         stripedGridUserProjects.setHeightFull();
         stripedGridUserProjects.setWidthFull();
+
 
         // Create a column layout for the text fields and buttons
         VerticalLayout layoutColumnLeft = new VerticalLayout();
@@ -117,7 +119,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         layoutColumnRight.add(h5Users, stripedGridUsers, h5UserProjects, stripedGridUserProjects);
         layoutColumnRight.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
 
-        // Add the grid to the layout
         stripedGridUsers.asSingleSelect().addValueChangeListener(event -> {
             User selectedUser = event.getValue();
             if (selectedUser != null) {
@@ -128,12 +129,14 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 emailTextField.setValue(selectedUser.getEmail());
                 bannedRadioGroup.setValue(selectedUser.isBanned() ? "Yes" : "No");
 
-                // Здесь вы можете добавить код для установки значений в другие текстовые поля
+                setGridProjectDataForSelectedUser(stripedGridUserProjects, selectedUser.getId());
+                System.out.println(selectedUser.getId());// Call the new method to display project data for the selected user
             } else {
                 idTextField.clear();
-                // Очистите значения других текстовых полей при отмене выбора
+                stripedGridUserProjects.setItems(Collections.emptyList()); // Clear the grid if no user is selected
             }
         });
+
 
         updateUserButton.addClickListener(event -> {
             User selectedUser = stripedGridUsers.asSingleSelect().getValue();
@@ -144,7 +147,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                     // Обновление данных пользователя
                     userToUpdate.setUsername(usernameTextField.getValue());
                     userToUpdate.setName(nameTextField.getValue());
-//                    userToUpdate.setRoles(rolesTextField.getValue()); // Это может потребовать конвертации
                     userToUpdate.setEmail(emailTextField.getValue());
                     userToUpdate.setBanned("Yes".equals(bannedRadioGroup.getValue()));
 
@@ -188,6 +190,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                         notification.open();
                     } else {
                         // Пользователь не найден, обработка ошибки
+                        Notification notification = new Notification("User with ID " + selectedUser.getId() + " not found", 3000);
                     }
                 }
             }
@@ -216,22 +219,22 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
 
         // Populate the grid with data
         setGridUserData(stripedGridUsers);
-
-        setGridProjectData(stripedGridUserProjects);
+        setGridProjectDataForSelectedUser(stripedGridUserProjects, getCurrentUserId());
     }
+
+
+    private void setGridProjectDataForSelectedUser(Grid stripedGridUserProjects, Long userId) {
+        stripedGridUserProjects.setItems(query -> sampleProjectService.findAllByUserId(userId,
+                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+                .stream());
+    }
+
 
     private Long getCurrentUserId() {
         return authenticatedUser.get().map(User::getId).orElse(null);
     }
 
 
-
-
-
-
-
-
-// типо говно
     private void setGridUserData(Grid<User> grid) {
         // Initialize filterValues with empty strings for each column
         grid.getColumns().forEach(column -> filterValues.add(""));
@@ -260,7 +263,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-//                    System.out.println(filterValues); // Print the filterValues list
                 });
                 idField.setSizeFull();
                 idField.setPlaceholder("Filter by ID");
@@ -281,7 +283,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-//                    System.out.println(filterValues); // Print the filterValues list
                 });
                 filterComboBox.setSizeFull();
                 filterRow.getCell(column).setComponent(filterComboBox);
@@ -294,7 +295,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                             .stream());
-//                    System.out.println(filterValues); // Print the filterValues list
                 });
                 filterField.setSizeFull();
                 filterField.setPlaceholder("Filter");
@@ -302,13 +302,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
             }
         }
     }
-
-    private void setGridProjectData(Grid grid) {
-        grid.setItems(query -> samplePersonService.list(
-                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
-                .stream());
-    }
-
 
 
     public void beforeEnter(BeforeEnterEvent event) {
