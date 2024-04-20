@@ -130,7 +130,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 bannedRadioGroup.setValue(selectedUser.isBanned() ? "Yes" : "No");
 
                 setGridProjectDataForSelectedUser(stripedGridUserProjects, selectedUser.getId());
-                System.out.println(selectedUser.getId());// Call the new method to display project data for the selected user
             } else {
                 idTextField.clear();
                 stripedGridUserProjects.setItems(Collections.emptyList()); // Clear the grid if no user is selected
