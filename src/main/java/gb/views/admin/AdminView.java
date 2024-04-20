@@ -106,7 +106,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         stripedGridUserProjects.setHeightFull();
         stripedGridUserProjects.setWidthFull();
 
-
         // Create a column layout for the text fields and buttons
         VerticalLayout layoutColumnLeft = new VerticalLayout();
         layoutColumnLeft.setWidth(null); // Width is determined by the widest component
@@ -226,6 +225,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         stripedGridUserProjects.setItems(query -> sampleProjectService.findAllByUserId(userId,
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
+        stripedGridUserProjects.setColumns("id", "version", "title", "description");
     }
 
 
@@ -301,7 +301,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
             }
         }
     }
-
 
     public void beforeEnter(BeforeEnterEvent event) {
         if (authenticatedUser.get().isPresent()) {
