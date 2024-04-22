@@ -1,7 +1,6 @@
 package gb.views.about;
 
 import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.icon.Icon;
@@ -21,8 +20,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+
 
 
 @PageTitle("About")
@@ -69,19 +67,6 @@ public class AboutView extends Composite<VerticalLayout> implements BeforeEnterO
         layout.setWidthFull();
         layout.setHeightFull();
         getContent().add(layout);
-    }
-
-    private static List<String> readLinesFromFile(String fileName) {
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(String.format(" %s", line));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return lines;
     }
 
     public void beforeEnter(BeforeEnterEvent event) {

@@ -197,7 +197,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         VerticalLayout modifyProjectLayout = new VerticalLayout();
 
         tabSheet.addSelectedChangeListener(event -> {
-            System.out.println(selectedProject.getTitle());
             modifyProjectLayout.removeAll(); // Очистить содержимое layout
             String text = new String("Select a project to modify from the \"Create and select project\" tab");
             if (selectedProject == null) {

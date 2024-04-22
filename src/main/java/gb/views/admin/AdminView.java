@@ -75,7 +75,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         H5 h5Users = new H5();
         h5Users.setText("Users:");
         H5 h5UserProjects = new H5();
-        h5UserProjects.setText("User projects:");
+        h5UserProjects.setText("Select user to show his projects");
 
         // Create the primary button
         Button updateUserButton = new Button("Update user");
@@ -129,11 +129,14 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 bannedRadioGroup.setValue(selectedUser.isBanned() ? "Yes" : "No");
 
                 setGridProjectDataForSelectedUser(stripedGridUserProjects, selectedUser.getId());
+                h5UserProjects.removeAll();
+                h5UserProjects.add(selectedUser.getUsername() + " projects:");
             } else {
                 idTextField.clear();
                 stripedGridUserProjects.setItems(Collections.emptyList()); // Clear the grid if no user is selected
             }
         });
+
 
 
         updateUserButton.addClickListener(event -> {
