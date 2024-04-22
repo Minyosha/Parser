@@ -1,7 +1,6 @@
 package gb.views.projects;
 
 import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.charts.model.Label;
@@ -14,6 +13,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
@@ -33,10 +33,6 @@ import org.springframework.data.domain.PageRequest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.zip.ZipEntry;
@@ -48,8 +44,8 @@ import java.util.zip.ZipOutputStream;
 @Uses(Icon.class)
 public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnterObserver {
     private final AuthenticatedUser authenticatedUser;
-    private TextField titleTextField = new TextField();
-    private TextField descriptionTextField = new TextField();
+    private TextArea titleTextField = new TextArea();
+    private TextArea descriptionTextField = new TextArea();
     private Anchor downloadButton;
     Projects selectedProject = (Projects) new Projects();
 
@@ -68,15 +64,17 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         tabSheet.getStyle().set("flex-grow", "1");
         setTabSheetSampleData(tabSheet);
         getContent().add(tabSheet);
-        tabSheet.addSelectedChangeListener(event -> {
-            System.out.println(selectedProject.getTitle());
-        });
+//        tabSheet.addSelectedChangeListener(event -> {
+//            System.out.println(selectedProject.getTitle());
+//        });
     }
 
 
     private void setTabSheetSampleData(TabSheet tabSheet) {
         titleTextField.setLabel("Title");
+        titleTextField.setMaxHeight("200px");
         descriptionTextField.setLabel("Description");
+        descriptionTextField.setMaxHeight("300px");
 
         // Create button
         Button createProjectButton = new Button("Create project");
@@ -310,8 +308,8 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 .stream());
         grid.setColumns("title", "description");
 
-        grid.getColumnByKey("title")
-                .setWidth("25%"); // Set the width of the "title" column to 25%
+        grid.getColumnByKey("description")
+                .setWidth("35%"); // Set the width of the "title" column to 25%
     }
 
     public void setSelectedProject(Projects project) {
