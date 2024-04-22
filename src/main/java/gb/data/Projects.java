@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Entity
@@ -22,6 +24,9 @@ public class Projects {
 
     @Column(nullable = false)
     private String description;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    private Set<String> articles = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -58,6 +63,14 @@ public class Projects {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Set<String> getArticles() {
+        return articles;
+    }
+
+    public void setArticles(Set<String> articles) {
+        this.articles = articles;
     }
 
     public User getUser() {
