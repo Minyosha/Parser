@@ -246,12 +246,13 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 project.setDescription(descriptionTextField.getValue());
                 sampleProjectService.createProject(project);
                 setGridProjectData(stripedGridUsers);
+                selectedProject = project;
             }
         });
 
         // Add an event listener to the "Open project" button.
         openProjectButton.addClickListener(e -> {
-            if (stripedGridUsers.getSelectedItems().isEmpty()) {
+            if (selectedProject == null) {
                 Notification.show("No project selected", 3000, Notification.Position.MIDDLE);
             } else {
                 tabSheet.setSelectedIndex(2); // Index of the third tab (0-based)
@@ -259,14 +260,19 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
         });
 
+        // Add an event listener to the "Delete project" button.
         deleteProjectButton.addClickListener(e -> {
-            Projects selectedProject = (Projects) stripedGridUsers.asSingleSelect().getValue();
+            selectedProject = (Projects) stripedGridUsers.asSingleSelect().getValue();
             if (stripedGridUsers.getSelectedItems().isEmpty()) {
                 Notification.show("No project selected", 3000, Notification.Position.MIDDLE);
             } else {
 
                 sampleProjectService.deleteProject(selectedProject.getId());
-
+                descriptionTextField.clear();
+                titleTextField.clear();
+                selectedProject = null;
+                modifyProjectLayout.removeAll();
+                modifyProjectLayout.add(new Text("Select a project to modify from the \"Create and select project\" tab"));
                 setGridProjectData(stripedGridUsers);
             }
         });
