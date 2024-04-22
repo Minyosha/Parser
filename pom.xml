@@ -137,7 +137,7 @@
 
     <profiles>
         <profile>
-            <!-- Production mode is activated using -Pproduction -->
+            <!-- Production mode is activated using -Production -->
             <id>production</id>
             <dependencies>
                 <!-- Exclude development dependencies from production -->
