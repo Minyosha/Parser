@@ -63,7 +63,6 @@ public class AboutView extends Composite<VerticalLayout> implements BeforeEnterO
                 ex.printStackTrace();
             }
         });
-        UI.getCurrent().getPage().executeJs("window.");
 
         VerticalLayout layout = new VerticalLayout(urlField, fetchButton, textField);
         layout.setFlexGrow(1, urlField, fetchButton, textField);

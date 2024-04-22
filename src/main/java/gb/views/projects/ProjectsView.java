@@ -31,6 +31,7 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import org.springframework.data.domain.PageRequest;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -137,66 +138,50 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         VerticalLayout downloadClientLayout = new VerticalLayout();
         // Download client button
         try {
-            // Создать временную папку
-            Path tempDirectory = Files.createTempDirectory("parser");
-            Path parserDirectory = tempDirectory.resolve("Parser");
-            Files.createDirectories(parserDirectory);
+            // Create a ByteArrayOutputStream to store the file content in memory
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            // Add a cleanup mechanism to delete the temporary directory when the user navigates away from the page
+            // Create a ZipOutputStream to create the zip file
+            ZipOutputStream zos = new ZipOutputStream(baos);
+
+            // Add a cleanup mechanism to close the ZipOutputStream when the user navigates away from the page
             addDetachListener(event -> {
                 try {
-                    Files.deleteIfExists(tempDirectory);
+                    zos.close();
                 } catch (IOException e) {
                     // Handle the exception
                 }
             });
 
-            // Копировать файл data.sql в папку Parser
-            Path sqlFile = parserDirectory.resolve("data.sql");
-            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.sql");
-            Files.copy(inputStream, sqlFile, StandardCopyOption.REPLACE_EXISTING);
+            // Create the "Parser" directory in memory
+            zos.putNextEntry(new ZipEntry("Parser/"));
+            zos.closeEntry();
 
-            // Создать файл client.txt с текстом и текущим временем в папке Parser
+            // Create the "data.sql" file in memory
+            String sqlContent = "Your SQL content here";
+            zos.putNextEntry(new ZipEntry("Parser/data.sql"));
+            zos.write(sqlContent.getBytes());
+            zos.closeEntry();
+
+            // Create the "client.txt" file in memory
             String currentTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             String clientText = "Hello, world\n" + currentTime;
-            Path clientFile = parserDirectory.resolve("client.txt");
-            Files.write(clientFile, clientText.getBytes());
+            zos.putNextEntry(new ZipEntry("Parser/client.txt"));
+            zos.write(clientText.getBytes());
+            zos.closeEntry();
 
-            // Заархивировать папку Parser в файл Parser.zip
-            Path zipPath = tempDirectory.resolve("Parser.zip");
-            try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipPath))) {
-                // Функция для добавления файла в zip
-                java.util.function.BiConsumer<Path, String> addToZip = (filePath, zipEntryName) -> {
-                    try (InputStream fis = Files.newInputStream(filePath)) {
-                        ZipEntry zipEntry = new ZipEntry(zipEntryName);
-                        zs.putNextEntry(zipEntry);
-                        byte[] bytes = new byte[1024];
-                        int length;
-                        while ((length = fis.read(bytes)) >= 0) {
-                            zs.write(bytes, 0, length);
-                        }
-                        zs.closeEntry();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                };
+            // Close the ZipOutputStream
+            zos.close();
 
-                // Добавить файлы в zip
-                addToZip.accept(sqlFile, "Parser/data.sql");
-                addToZip.accept(clientFile, "Parser/client.txt");
-            }
+            // Get the byte array containing the zip file content
+            byte[] zipContent = baos.toByteArray();
 
-            // Подготовить StreamResource для скачивания
+            // Prepare the StreamResource for download
             StreamResource resource = new StreamResource("Parser.zip", () -> {
-                try {
-                    return Files.newInputStream(zipPath);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return new ByteArrayInputStream(new byte[0]);
-                }
+                return new ByteArrayInputStream(zipContent);
             });
 
-            // Инициализировать кнопку скачивания
+            // Initialize the download button
             downloadButton = new Anchor(resource, "Download Parser.zip");
             downloadButton.getElement().setAttribute("download", true);
             downloadButton.add(new Button(new Icon(VaadinIcon.DOWNLOAD)));
@@ -225,8 +210,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             }
             modifyProjectLayout.add(text);
         });
-
-
 
 
         // Now add the VerticalLayout to the "Create and select project" tab.
@@ -307,7 +290,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 descriptionTextField.setValue(selectedProject.getDescription());
             }
         });
-
 
 
     }
