@@ -7,6 +7,7 @@ import com.vaadin.flow.component.charts.model.Label;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -25,14 +26,18 @@ import gb.services.ProjectsService;
 import gb.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import com.vaadin.flow.component.grid.Grid;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.tabs.TabSheet;
 import org.springframework.data.domain.PageRequest;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.zip.ZipEntry;
@@ -48,6 +53,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
     private TextArea descriptionTextField = new TextArea();
     private Anchor downloadButton;
     Projects selectedProject = (Projects) new Projects();
+    private int port = 8080;
 
     @Autowired
     private ProjectsService sampleProjectService;
@@ -162,8 +168,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             zos.closeEntry();
 
             // Create the "client.txt" file in memory
-            String currentTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            String clientText = "Hello, world\n" + currentTime;
+            String clientText = InetAddress.getLocalHost().getHostAddress() + ":" + port + "\n" + getPublicIp() + ":" + port;
             zos.putNextEntry(new ZipEntry("Parser/client.txt"));
             zos.write(clientText.getBytes());
             zos.closeEntry();
@@ -184,8 +189,20 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             downloadButton.getElement().setAttribute("download", true);
             downloadButton.add(new Button(new Icon(VaadinIcon.DOWNLOAD)));
 
-            downloadClientLayout.add(new Text("On this page you can download desktop client with configuration data"));
+            downloadClientLayout.add(new H5("On this page you can download desktop client with configuration data"));
             downloadClientLayout.add(downloadButton);
+
+
+            Anchor localIpLink = new Anchor("http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port, "Access via your local IP: " +
+                    InetAddress.getLocalHost().getHostAddress() + ":" + port);
+            localIpLink.setTarget("_blank"); // Открытие ссылки в новом окне
+
+            Anchor publicIpLink = new Anchor("http://" + getPublicIp() + ":" + port, "Access via your public IP: " + getPublicIp() + ":" + port);
+            publicIpLink.setTarget("_blank"); // Открытие ссылки в новом окне
+
+            downloadClientLayout.add(localIpLink);
+            downloadClientLayout.add(publicIpLink);
+
         } catch (IOException e) {
             e.printStackTrace();
             Label errorLabel = new Label("Unable to create the archive");
@@ -195,18 +212,71 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
         // Create a modify project layout
         VerticalLayout modifyProjectLayout = new VerticalLayout();
+        HorizontalLayout horizontalLayoutForModifyProject = new HorizontalLayout();
+        VerticalLayout leftModVerticalLayout = new VerticalLayout();
+        VerticalLayout rightModVerticalLayout = new VerticalLayout();
+
+        modifyProjectLayout.setWidthFull(); // Set width to full
+        modifyProjectLayout.setHeightFull();
+        modifyProjectLayout.getStyle().set("flex-grow", "1");
+
+
+
+        TextField urlField = new TextField();
+        urlField.setPlaceholder("Enter URL to view HTML code");
+        urlField.setWidthFull();
+
+        TextArea textField = new TextArea();
+        textField.setSizeFull();
+
+        Button fetchButton = new Button("View HTML code");
+        fetchButton.addClickListener(e -> {
+            String url = urlField.getValue();
+            try {
+                Connection.Response response = Jsoup.connect(url)
+                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+                        .referrer("http://www.google.com")
+                        .timeout(10000)
+                        .followRedirects(true)
+                        .execute();
+
+                Document document = Jsoup.parse(response.body());
+                String formattedHtml = document.html();
+
+                textField.setValue(formattedHtml);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });// Select project and go to modify page
+
+
+
 
         tabSheet.addSelectedChangeListener(event -> {
             modifyProjectLayout.removeAll(); // Очистить содержимое layout
             String text = new String("Select a project to modify from the \"Create and select project\" tab");
-            if (selectedProject == null) {
+            modifyProjectLayout.add(text);
+            if (selectedProject.getTitle() != null) {
+                text = ("On this page you can modify project " + selectedProject.getTitle() + ": " + selectedProject.getDescription());
+                modifyProjectLayout.removeAll();
+                modifyProjectLayout.add(text);
+                rightModVerticalLayout.add(urlField, fetchButton, textField);
+                horizontalLayoutForModifyProject.add(leftModVerticalLayout, rightModVerticalLayout);
+                horizontalLayoutForModifyProject.setWidthFull();
+                horizontalLayoutForModifyProject.setHeightFull();
+                horizontalLayoutForModifyProject.getStyle().set("flex-grow", "1");
+                rightModVerticalLayout.setFlexGrow(1, urlField, fetchButton, textField);
+                rightModVerticalLayout.setWidthFull();
+                rightModVerticalLayout.setHeightFull();
+                modifyProjectLayout.add(horizontalLayoutForModifyProject);
+            } else if (selectedProject == null) {
                 modifyProjectLayout.add(text);
                 return;
-            } else if (selectedProject.getTitle() != null) {
-                text = ("On this page you can modify project " + selectedProject.getTitle() + ": " + selectedProject.getDescription());
             }
-            modifyProjectLayout.add(text);
+
         });
+
+
 
 
         // Now add the VerticalLayout to the "Create and select project" tab.
@@ -299,6 +369,20 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 event.forwardTo("banned-view");
             }
         }
+    }
+
+    public String getPublicIp() {
+        try {
+            URL url = new URL("https://api.ipify.org");
+            URLConnection connection = url.openConnection();
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String ip = in.readLine();
+            in.close();
+            return ip;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "Error";
     }
 
     private void setGridProjectData(Grid grid) {
