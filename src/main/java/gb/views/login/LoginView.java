@@ -8,7 +8,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import gb.data.User;
-import gb.data.UserRepository;
+import gb.repository.UserRepository;
 import gb.security.AuthenticatedUser;
 
 

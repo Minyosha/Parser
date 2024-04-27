@@ -2,7 +2,7 @@ package gb.security;
 
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import gb.data.User;
-import gb.data.UserRepository;
+import gb.repository.UserRepository;
 import java.util.Optional;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;

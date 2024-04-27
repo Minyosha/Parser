@@ -5,7 +5,7 @@ import com.vaadin.flow.theme.Theme;
 
 import javax.sql.DataSource;
 
-import gb.data.ProjectsRepository;
+import gb.repository.ProjectsRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDatabaseInitializer;

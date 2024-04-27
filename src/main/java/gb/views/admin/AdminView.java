@@ -25,6 +25,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import gb.data.*;
+import gb.repository.UserRepository;
 import gb.security.AuthenticatedUser;
 import gb.services.ProjectsService;
 import gb.services.UserService;
@@ -228,7 +229,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         stripedGridUserProjects.setItems(query -> sampleProjectService.findAllByUserId(userId,
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
-        stripedGridUserProjects.setColumns("id", "version", "title", "description");
+        stripedGridUserProjects.setColumns("id", "version", "title", "description", "articles");
     }
 
 

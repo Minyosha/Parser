@@ -1,7 +1,11 @@
 package gb.services;
 
+import gb.data.Article;
 import gb.data.Projects;
-import gb.data.ProjectsRepository;
+import gb.data.Variants;
+import gb.repository.ArticleRepository;
+import gb.repository.ProjectsRepository;
+import gb.repository.VariantsRepository;
 import gb.security.AuthenticatedUser;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -21,11 +25,15 @@ public class ProjectsService {
 
     private final ProjectsRepository projectsRepository;
     private final AuthenticatedUser authenticatedUser;
+    private final ArticleRepository articleRepository;
+    private final VariantsRepository variantsRepository;
 
     @Autowired
-    public ProjectsService(ProjectsRepository projectsRepository, AuthenticatedUser authenticatedUser) {
+    public ProjectsService(ProjectsRepository projectsRepository, AuthenticatedUser authenticatedUser, ArticleRepository articleRepository, VariantsRepository variantsRepository) {
         this.projectsRepository = projectsRepository;
         this.authenticatedUser = authenticatedUser;
+        this.articleRepository = articleRepository;
+        this.variantsRepository = variantsRepository;
     }
 
     public List<Projects> getAllProjects() {
@@ -76,5 +84,19 @@ public class ProjectsService {
 
     public List<Projects> findAllByUserId(Long userId, PageRequest pageRequest) {
         return projectsRepository.findAllByUser_Id(userId, pageRequest);
+    }
+
+    public List<Article> getArticlesByProject(Long projectId) {
+        Projects selectedProject = projectsRepository.findById(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+
+        return articleRepository.findByProject(selectedProject);
+    }
+
+    public List<Variants> getVariantsByProject(Long projectId) {
+        Projects selectedProject = projectsRepository.findById(projectId)
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+
+        return variantsRepository.findByProject(selectedProject);
     }
 }

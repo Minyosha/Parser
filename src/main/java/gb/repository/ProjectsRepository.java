@@ -1,5 +1,7 @@
-package gb.data;
+package gb.repository;
 
+import gb.data.Projects;
+import gb.data.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +15,6 @@ public interface ProjectsRepository extends JpaRepository<Projects, Long> {
     Page<Projects> findAllByUser(User user, Pageable pageable);
 
     List<Projects> findAllByUser_Id(Long id, Pageable pageable);
+
+
 }

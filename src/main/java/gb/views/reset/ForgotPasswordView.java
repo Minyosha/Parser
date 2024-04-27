@@ -11,7 +11,7 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import gb.data.User;
-import gb.data.UserRepository;
+import gb.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;

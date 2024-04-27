@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Entity
@@ -25,13 +26,31 @@ public class Projects {
     @Column(nullable = false)
     private String description;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    private Set<String> articles = new HashSet<>();
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<Article> articles = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<Variants> variants = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    public Set<Article> getArticles() {
+        return articles;
+    }
+
+    public void setArticles(Set<Article> articles) {
+        this.articles = articles;
+    }
+
+    public Set<Variants> getVariants() {
+        return variants;
+    }
+
+    public void setVariants(Set<Variants> variants) {
+        this.variants = variants;
+    }
 
     public Long getId() {
         return id;
@@ -65,14 +84,6 @@ public class Projects {
         this.description = description;
     }
 
-    public Set<String> getArticles() {
-        return articles;
-    }
-
-    public void setArticles(Set<String> articles) {
-        this.articles = articles;
-    }
-
     public User getUser() {
         return user;
     }
@@ -80,5 +91,7 @@ public class Projects {
     public void setUser(User user) {
         this.user = user;
     }
+
+
 
 }

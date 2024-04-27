@@ -1,7 +1,7 @@
 package gb.security;
 
 import gb.data.User;
-import gb.data.UserRepository;
+import gb.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
