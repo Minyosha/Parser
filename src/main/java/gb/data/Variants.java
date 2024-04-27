@@ -17,6 +17,26 @@ public class Variants {
     @ManyToOne
     private Projects project;
 
+    public Variants() {
+        // Default constructor
+    }
+
+    public Variants(Projects project, String line) {
+        this.project = project;
+        this.variant_content = line;
+    }
+
+    public Variants(Long id, String variant_content, Projects project) {
+        this.id = id;
+        this.variant_content = variant_content;
+        this.project = project;
+    }
+
+    public Variants(String variant_content, Projects project) {
+        this.variant_content = variant_content;
+        this.project = project;
+    }
+
     // геттеры, сеттеры и т.д.
 
     public Long getId() {
@@ -41,6 +61,15 @@ public class Variants {
 
     public void setProject(Projects project) {
         this.project = project;
+    }
+
+    @Override
+    public String toString() {
+        return "Variants{" +
+                "id=" + id +
+                ", variant_content='" + variant_content + '\'' +
+                ", project=" + project +
+                '}';
     }
 
 }

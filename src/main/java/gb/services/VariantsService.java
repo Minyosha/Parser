@@ -1,5 +1,6 @@
 package gb.services;
 
+import gb.data.Article;
 import gb.data.Projects;
 import gb.data.Variants;
 import gb.repository.VariantsRepository;
@@ -27,5 +28,9 @@ public class VariantsService {
 
     public void deleteByProjectId(Long id) {
         variantsRepository.deleteByProjectId(id);
+    }
+
+    public void save(Variants variants) {
+        variantsRepository.save(variants);
     }
 }

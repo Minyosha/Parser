@@ -6,7 +6,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.charts.model.Label;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.icon.Icon;
@@ -45,8 +44,6 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -142,10 +139,33 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         strippedGridArticles.setWidthFull();
         strippedGridArticles.getStyle().set("flex-grow", "1");
 
-        Button pasteArticlesButton = new Button("Paste articles from buffer"); // Add a button to delete an article
+        TextField pasteArticlesTextField = new TextField();
+        pasteArticlesTextField.setWidth("300px");
+        pasteArticlesTextField.getStyle().set("flex-grow", "1");
+        pasteArticlesTextField.setLabel("Type/Paste articles separated by spaces");
+
+        Button pasteArticlesButton = new Button("Paste articles");
         pasteArticlesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         pasteArticlesButton.setEnabled(false);
 //        pasteArticlesButton.setWidth("192px");
+
+        pasteArticlesButton.addClickListener(e -> {
+            if (selectedProject != null) {
+                String text = pasteArticlesTextField.getValue();
+                String[] articles = text.trim().split("\\s+"); // добавили .trim()
+                for (String article : articles) {
+                    if (!isDuplicateArticle(article)) {
+                        articleService.save(new Article(selectedProject, article));
+                    }
+                }
+                selectedProject.getArticles().clear();
+                selectedProject.getArticles().addAll(articleService.findByProject(selectedProject));
+                strippedGridArticles.setItems(selectedProject.getArticles().stream()
+                        .map(Article::getArticle_content)
+                        .collect(Collectors.toList()));
+            }
+            pasteArticlesTextField.clear();
+        });
 
         Button deleteArticlesButton = new Button("Delete all articles"); // Add a button to delete an article
         deleteArticlesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -169,7 +189,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         verticalLayoutForArticles.setPadding(false);
         verticalLayoutForArticles.getStyle().set("flex-grow", "1");
         verticalLayoutForArticles.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
-        verticalLayoutForArticles.add(strippedGridArticles, pasteArticlesButton, deleteArticlesButton);
+        verticalLayoutForArticles.add(strippedGridArticles, pasteArticlesTextField, pasteArticlesButton, deleteArticlesButton);
 
 
 
@@ -182,10 +202,37 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         strippedGridVariants.setWidthFull();
         strippedGridVariants.getStyle().set("flex-grow", "1");
 
-        Button pasteVariantsButton = new Button("Paste site variants from buffer"); // Add a button to delete an article
+        TextField pasteVariantsTextField = new TextField();
+        pasteVariantsTextField.setWidth("300px");
+        pasteVariantsTextField.getStyle().set("flex-grow", "1");
+        pasteVariantsTextField.setLabel("Type/Paste variants separated by spaces");
+
+
+        Button pasteVariantsButton = new Button("Paste site variants"); // Add a button to delete an article
         pasteVariantsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         pasteVariantsButton.setEnabled(false);
 //        pasteVariantsButton.setWidth("192px");
+
+
+
+
+        pasteVariantsButton.addClickListener(e -> {
+            if (selectedProject != null) {
+                String text = pasteVariantsTextField.getValue();
+                String[] variants = text.trim().split("\\s+"); // добавили .trim()
+                for (String variant : variants) {
+                    if (!isDuplicateVariant(variant)) {
+                        variantsService.save(new Variants(selectedProject, variant));
+                    }
+                }
+                selectedProject.getVariants().clear();
+                selectedProject.getVariants().addAll(variantsService.findByProject(selectedProject));
+                strippedGridVariants.setItems(selectedProject.getVariants().stream()
+                        .map(Variants::getVariant_content)
+                        .collect(Collectors.toList()));
+            }
+            pasteVariantsTextField.clear();
+        });
 
 
         Button deleteVariantsButton = new Button("Delete all site variants"); // Add a button to delete an article
@@ -212,7 +259,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         verticalLayoutForVariants.setPadding(false);
         verticalLayoutForVariants.getStyle().set("flex-grow", "1");
         verticalLayoutForVariants.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
-        verticalLayoutForVariants.add(strippedGridVariants, pasteVariantsButton, deleteVariantsButton);
+        verticalLayoutForVariants.add(strippedGridVariants, pasteVariantsTextField, pasteVariantsButton, deleteVariantsButton);
 
 
         // Create a VerticalLayout to stack components vertically.
@@ -366,6 +413,10 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         Button updateOperationButton = new Button("Update operation");
         updateOperationButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         updateOperationButton.setWidth("192px");
+
+        updateOperationButton.addClickListener(e -> {
+            System.out.println(selectedProject.getVariants());
+        });
 
         Button createOperationButton = new Button("Create operation");
         createOperationButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -599,6 +650,28 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             System.out.println("Cannot set selectedProject to null");
         }
         this.selectedProject = project;
+    }
+
+    private boolean isDuplicateArticle(String articleContent) {
+        if (selectedProject != null) {
+            for (Article article : selectedProject.getArticles()) {
+                if (article.getArticle_content().equals(articleContent)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isDuplicateVariant(String article) {
+        if (selectedProject != null) {
+            for (Variants variant : selectedProject.getVariants()) {
+                if (variant.getVariant_content().equals(article)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

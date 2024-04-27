@@ -17,7 +17,26 @@ public class Article {
     @ManyToOne
     private Projects project;
 
-    // геттеры, сеттеры и т.д.
+    public Article() {
+        // Default constructor
+    }
+
+    public Article(Projects project, String line) {
+        this.project = project;
+        this.article_content = line;
+    }
+
+    public Article(Long id, String article_content, Projects project) {
+        this.id = id;
+        this.article_content = article_content;
+        this.project = project;
+    }
+
+    public Article(String article_content, Projects project) {
+        this.article_content = article_content;
+        this.project = project;
+    }
+// геттеры, сеттеры и т.д.
 
     public Long getId() {
         return id;
