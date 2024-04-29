@@ -2,11 +2,8 @@ package gb.data;
 
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
-@Table(name = "articles")
+@Table(name = "article")
 public class Article {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,24 +12,24 @@ public class Article {
     private String article_content;
 
     @ManyToOne
-    private Projects project;
+    private Project project;
 
     public Article() {
         // Default constructor
     }
 
-    public Article(Projects project, String line) {
+    public Article(Project project, String line) {
         this.project = project;
         this.article_content = line;
     }
 
-    public Article(Long id, String article_content, Projects project) {
+    public Article(Long id, String article_content, Project project) {
         this.id = id;
         this.article_content = article_content;
         this.project = project;
     }
 
-    public Article(String article_content, Projects project) {
+    public Article(String article_content, Project project) {
         this.article_content = article_content;
         this.project = project;
     }
@@ -54,11 +51,11 @@ public class Article {
         this.article_content = article_content;
     }
 
-    public Projects getProject() {
+    public Project getProject() {
         return project;
     }
 
-    public void setProject(Projects project) {
+    public void setProject(Project project) {
         this.project = project;
     }
 }

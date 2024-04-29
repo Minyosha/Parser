@@ -2,11 +2,8 @@ package gb.data;
 
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
-@Table(name = "variants")
+@Table(name = "variant")
 public class Variants {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,24 +12,24 @@ public class Variants {
     private String variant_content;
 
     @ManyToOne
-    private Projects project;
+    private Project project;
 
     public Variants() {
         // Default constructor
     }
 
-    public Variants(Projects project, String line) {
+    public Variants(Project project, String line) {
         this.project = project;
         this.variant_content = line;
     }
 
-    public Variants(Long id, String variant_content, Projects project) {
+    public Variants(Long id, String variant_content, Project project) {
         this.id = id;
         this.variant_content = variant_content;
         this.project = project;
     }
 
-    public Variants(String variant_content, Projects project) {
+    public Variants(String variant_content, Project project) {
         this.variant_content = variant_content;
         this.project = project;
     }
@@ -55,11 +52,11 @@ public class Variants {
         this.variant_content = variant_content;
     }
 
-    public Projects getProject() {
+    public Project getProject() {
         return project;
     }
 
-    public void setProject(Projects project) {
+    public void setProject(Project project) {
         this.project = project;
     }
 

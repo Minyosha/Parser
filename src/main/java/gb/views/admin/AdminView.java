@@ -102,7 +102,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         stripedGridUsers.setHeightFull();
         stripedGridUsers.setWidthFull();
 
-        Grid<Projects> stripedGridUserProjects = new Grid<>(Projects.class);
+        Grid<Project> stripedGridUserProjects = new Grid<>(Project.class);
         stripedGridUserProjects.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         stripedGridUserProjects.setHeightFull();
         stripedGridUserProjects.setWidthFull();
@@ -229,7 +229,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         stripedGridUserProjects.setItems(query -> sampleProjectService.findAllByUserId(userId,
                         PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
-        stripedGridUserProjects.setColumns("id", "version", "title", "description", "articles");
+        stripedGridUserProjects.setColumns("id", "version", "title", "description");
     }
 
 

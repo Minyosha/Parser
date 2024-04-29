@@ -1,7 +1,6 @@
 package gb.services;
 
-import gb.data.Article;
-import gb.data.Projects;
+import gb.data.Project;
 import gb.data.Variants;
 import gb.repository.VariantsRepository;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,7 @@ public class VariantsService {
         return variantsRepository;
     }
 
-    public List<Variants> findByProject(Projects selectedProject) {
+    public List<Variants> findByProject(Project selectedProject) {
         return variantsRepository.findByProject(selectedProject);
     }
 

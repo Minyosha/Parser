@@ -1,18 +1,18 @@
 package gb.data;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import org.hibernate.annotations.DynamicUpdate;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Entity
-@Table(name = "projects")
+@Table(name = "project")
 @DynamicUpdate
-public class Projects {
+public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,6 +35,9 @@ public class Projects {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column
+    private String jsonData;
 
     public Set<Article> getArticles() {
         return articles;
@@ -92,6 +95,24 @@ public class Projects {
         this.user = user;
     }
 
+    public String getJsonData() {
+        return jsonData;
+    }
 
+    public String getJsonData(String key) {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = mapper.readTree(jsonData);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        String jsonData = jsonNode.get(key).asText();
+        return jsonData;
+    }
+
+    public void setJsonData(String jsonData) {
+        this.jsonData = jsonData;
+    }
 
 }

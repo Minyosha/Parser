@@ -1,7 +1,7 @@
 package gb.repository;
 
 import gb.data.Article;
-import gb.data.Projects;
+import gb.data.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ArticleRepository extends JpaRepository<Article, Long>{
 
-    List<Article> findByProject(Projects selectedProject);
+    List<Article> findByProject(Project selectedProject);
 
     @Modifying
     @Query("DELETE FROM Article a WHERE a.project.id = :projectId")

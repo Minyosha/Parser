@@ -1,7 +1,7 @@
 package gb.services;
 
 import gb.data.Article;
-import gb.data.Projects;
+import gb.data.Project;
 import gb.data.Variants;
 import gb.repository.ArticleRepository;
 import gb.repository.ProjectsRepository;
@@ -36,20 +36,20 @@ public class ProjectsService {
         this.variantsRepository = variantsRepository;
     }
 
-    public List<Projects> getAllProjects() {
+    public List<Project> getAllProjects() {
         return projectsRepository.findAllByUser(authenticatedUser.get().get());
     }
 
-    public Optional<Projects> getProjectById(Long id) {
+    public Optional<Project> getProjectById(Long id) {
         return projectsRepository.findById(id);
     }
 
-    public Projects createProject(Projects project) {
+    public Project createProject(Project project) {
         project.setUser(authenticatedUser.get().get());
         return projectsRepository.save(project);
     }
 
-    public Projects updateProject(Long id, Projects project) {
+    public Project updateProject(Long id, Project project) {
         return projectsRepository.findById(id)
                 .map(existingProject -> {
                     existingProject.setTitle(project.getTitle());
@@ -64,39 +64,44 @@ public class ProjectsService {
         projectsRepository.deleteById(id);
     }
 
-    public Page<Projects> list(Pageable pageable) {
+    public Page<Project> list(Pageable pageable) {
         return projectsRepository.findAllByUser(authenticatedUser.get().get(), pageable);
     }
 
 
-    public Page<Projects> listByUser(Pageable pageable) {
+    public Page<Project> listByUser(Pageable pageable) {
         return projectsRepository.findAllByUser(authenticatedUser.get().get(), pageable);
     }
 
 
-    public Projects findById(Long id) {
+    public Project findById(Long id) {
         return projectsRepository.findById(id).orElse(null);
     }
 
-    public void update(Projects projectToUpdate) {
+    public void update(Project projectToUpdate) {
         projectsRepository.save(projectToUpdate);
     }
 
-    public List<Projects> findAllByUserId(Long userId, PageRequest pageRequest) {
+    public List<Project> findAllByUserId(Long userId, PageRequest pageRequest) {
         return projectsRepository.findAllByUser_Id(userId, pageRequest);
     }
 
     public List<Article> getArticlesByProject(Long projectId) {
-        Projects selectedProject = projectsRepository.findById(projectId)
+        Project selectedProject = projectsRepository.findById(projectId)
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
 
         return articleRepository.findByProject(selectedProject);
     }
 
     public List<Variants> getVariantsByProject(Long projectId) {
-        Projects selectedProject = projectsRepository.findById(projectId)
+        Project selectedProject = projectsRepository.findById(projectId)
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
 
         return variantsRepository.findByProject(selectedProject);
     }
+
+    public void saveJsonData(Project selectedProject) {
+        projectsRepository.save(selectedProject);
+    }
+
 }

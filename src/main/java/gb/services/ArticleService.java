@@ -1,7 +1,7 @@
 package gb.services;
 
 import gb.data.Article;
-import gb.data.Projects;
+import gb.data.Project;
 import gb.repository.ArticleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,7 @@ public class ArticleService {
         return articleRepository;
     }
 
-    public List<Article> findByProject(Projects selectedProject) {
+    public List<Article> findByProject(Project selectedProject) {
         return articleRepository.findByProject(selectedProject);
     }
 

@@ -1,5 +1,10 @@
 package gb.views.projects;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.nimbusds.jose.shaded.gson.Gson;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -19,11 +24,10 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import gb.data.Projects;
-import gb.data.User;
-import gb.data.Article;
-import gb.data.Variants;
+import gb.data.*;
 import gb.security.AuthenticatedUser;
 import gb.services.ArticleService;
 import gb.services.ProjectsService;
@@ -32,6 +36,7 @@ import gb.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
 import com.vaadin.flow.component.grid.Grid;
 import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +45,11 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import org.springframework.data.domain.PageRequest;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.URL;
-import java.net.URLConnection;
+import java.lang.reflect.Field;
+import java.net.*;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -57,7 +63,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
     private TextArea titleTextField = new TextArea();
     private TextArea descriptionTextField = new TextArea();
     private Anchor downloadButton;
-    Projects selectedProject = (Projects) new Projects();
+    Project selectedProject = (Project) new Project();
     private int port = 8080;
     private String ipForREST;
 
@@ -121,7 +127,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         openProjectButton.setWidth("192px");
 
         // Create a Grid.
-        Grid stripedGridProjects = new Grid(Projects.class);
+        Grid stripedGridProjects = new Grid(Project.class);
         stripedGridProjects.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         stripedGridProjects.setHeightFull();
         stripedGridProjects.setWidthFull();
@@ -401,26 +407,15 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
         // Create a modify project layout
         VerticalLayout modifyProjectLayout = new VerticalLayout();
-        HorizontalLayout horizontalLayoutForModifyProject = new HorizontalLayout();
-        HorizontalLayout upperHorizontalLayoutForModifyProject = new HorizontalLayout();
-        VerticalLayout leftModVerticalLayout = new VerticalLayout();
-        VerticalLayout rightModVerticalLayout = new VerticalLayout();
-
         modifyProjectLayout.setWidthFull(); // Set width to full
         modifyProjectLayout.setHeightFull();
         modifyProjectLayout.getStyle().set("flex-grow", "1");
 
-        Button updateOperationButton = new Button("Update operation");
-        updateOperationButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        updateOperationButton.setWidth("192px");
+        HorizontalLayout horizontalLayoutForModifyProject = new HorizontalLayout();
+        VerticalLayout leftModVerticalLayout = new VerticalLayout();
+        VerticalLayout rightModVerticalLayout = new VerticalLayout();
 
-        updateOperationButton.addClickListener(e -> {
-            System.out.println(selectedProject.getVariants());
-        });
 
-        Button createOperationButton = new Button("Create operation");
-        createOperationButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createOperationButton.setWidth("192px");
 
 
 
@@ -428,62 +423,181 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         urlField.setPlaceholder("Enter URL to view HTML code");
         urlField.setWidthFull();
 
-        TextArea textField = new TextArea();
-        textField.setMaxHeight("490px");
-        textField.setSizeFull();
+        TextArea HtmlTextField = new TextArea();
+//        HtmlTextField.setMaxHeight("490px");
+        HtmlTextField.setSizeFull();
+
+        TextArea consoleTextField = new TextArea();
+//        ConsoleTextField.setMaxHeight("490px");
+        consoleTextField.setSizeFull();
+
+
+        TextField getHtmlStartSearch = new TextField();
+        getHtmlStartSearch.setLabel("Start search with this:");
+
+
+        TextField getHtmlStartSearchOffset = new TextField();
+        getHtmlStartSearchOffset.setLabel("Enter offset");
+        getHtmlStartSearchOffset.setPattern("[0-9]*");
+        getHtmlStartSearchOffset.setErrorMessage("Only numbers are allowed");
+        getHtmlStartSearchOffset.addValueChangeListener(event -> {
+            String text = event.getValue();
+            if (!text.matches("[0-9]*")) {
+                // Если введено не число, очищаем поле или возвращаем предыдущее допустимое значение
+                getHtmlStartSearchOffset.setValue(event.getOldValue());
+            }
+        });
+
+        TextField getHtmlEndSearch = new TextField();
+        getHtmlEndSearch.setLabel("End search with this:");
+
+
+        TextField getHtmlEndSearchOffset = new TextField();
+        getHtmlEndSearchOffset.setLabel("Enter offset");
+        getHtmlEndSearchOffset.setPattern("[0-9]*");
+        getHtmlEndSearchOffset.setErrorMessage("Only numbers are allowed");
+        getHtmlEndSearchOffset.addValueChangeListener(event -> {
+            String text = event.getValue();
+            if (!text.matches("[0-9]*")) {
+                // Если введено не число, очищаем поле или возвращаем предыдущее допустимое значение
+                getHtmlEndSearchOffset.setValue(event.getOldValue());
+            }
+        });
+
+
+
+
+
+
+        Button updateOperationsButton = new Button("Update operations");
+        updateOperationsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        updateOperationsButton.setWidth("192px");
+
+        updateOperationsButton.addClickListener(e -> {
+            Project projectToUpdate = sampleProjectService.findById(selectedProject.getId());
+            String getHtmlStartSearchValue = getHtmlStartSearch.getValue();
+            String getHtmlStartSearchOffsetValue = getHtmlStartSearchOffset.getValue();
+            String getHtmlEndSearchValue = getHtmlEndSearch.getValue();
+            String getHtmlEndSearchOffsetValue = getHtmlEndSearchOffset.getValue();
+
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put("getHtmlStartSearch", getHtmlStartSearchValue);
+            parameters.put("getHtmlStartSearchOffset", getHtmlStartSearchOffsetValue);
+            parameters.put("getHtmlEndSearch", getHtmlEndSearchValue);
+            parameters.put("getHtmlEndSearchOffset", getHtmlEndSearchOffsetValue);
+
+            // Convert the map to JSON using Gson
+            Gson gson = new Gson();
+            String jsonData = gson.toJson(parameters);
+
+            projectToUpdate.setJsonData(jsonData);
+            sampleProjectService.update(projectToUpdate);
+
+        });
+
+        Button testOperationsButton = new Button("Test operations");
+        testOperationsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        testOperationsButton.setWidth("192px");
+
+        testOperationsButton.addClickListener(e -> {
+            updateOperationsButton.click();
+            try {
+                selectedProject = sampleProjectService.findById(selectedProject.getId());
+                Operations.runTest(selectedProject, consoleTextField);
+            } catch (HttpStatusException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+
 
         Button viewHtmlButton = new Button("View HTML code");
         viewHtmlButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         viewHtmlButton.setWidth("192px");
+        viewHtmlButton.setMaxHeight("36px");
         viewHtmlButton.addClickListener(e -> {
+            VaadinRequest currentRequest = VaadinService.getCurrentRequest();
+            String userAgent = currentRequest.getHeader("User-Agent");
+
             String url = urlField.getValue();
-            try {
-                Connection.Response response = Jsoup.connect(url)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
-                        .referrer("http://www.google.com")
-                        .timeout(10000)
-                        .followRedirects(true)
-                        .execute();
+            if (isValidUrl(url)) {
+                if (isUrlValid(url)) {
+                    try {
+                        Connection.Response response = Jsoup.connect(url)
+                                .userAgent(userAgent) // use the user agent from the current request
+                                .referrer("http://www.google.com")
+                                .timeout(10000)
+                                .followRedirects(true)
+                                .execute();
 
-                Document document = Jsoup.parse(response.body());
-                String formattedHtml = document.html();
+                        Document document = Jsoup.parse(response.body());
+                        String formattedHtml = document.html();
 
-                textField.setValue(formattedHtml);
-            } catch (IOException ex) {
-                ex.printStackTrace();
+                        HtmlTextField.setValue(formattedHtml);
+                    } catch (SocketTimeoutException ste) {
+                        // Логирование исключения или уведомление пользователя
+                        System.out.println("Connection timed out. Please try again later.");
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                } else {
+                    Notification notification = new Notification("URL does not exist or is unreachable", 3000);
+                    notification.open();
+                    notification.setPosition(Notification.Position.MIDDLE);
+                }
+            } else {
+                Notification notification = new Notification("Please enter a valid URL starting with 'http://' or 'https://'", 3000);
+                notification.open();
+                notification.setPosition(Notification.Position.MIDDLE);
             }
-        });// Select project and go to modify page
+        });
+
+        // Create a run project layout
+        VerticalLayout runProjectLayout = new VerticalLayout();
+        runProjectLayout.setWidthFull(); // Set width to full
+        runProjectLayout.setHeightFull();
+        runProjectLayout.getStyle().set("flex-grow", "1");
 
 
 
 
         tabSheet.addSelectedChangeListener(event -> {
             modifyProjectLayout.removeAll(); // Очистить содержимое layout
-            String text = new String("Select a project to modify from the \"Create and select project\" tab");
-            modifyProjectLayout.add(text);
+            runProjectLayout.removeAll();
+            String selectProjectText = new String("Select a project to modify from the \"Create and select project\" tab");
+            modifyProjectLayout.add(selectProjectText);
+            runProjectLayout.add(selectProjectText);
             if (selectedProject.getTitle() != null) {
-                text = ("On this page you can modify project " + selectedProject.getTitle() + ": " + selectedProject.getDescription());
+                selectProjectText = ("On this page you can modify project " + selectedProject.getTitle() + ": " + selectedProject.getDescription());
                 modifyProjectLayout.removeAll();
-                modifyProjectLayout.add(text);
-                rightModVerticalLayout.add(urlField, viewHtmlButton, textField);
+                modifyProjectLayout.add(selectProjectText);
+                modifyProjectLayout.setPadding(false);
+                rightModVerticalLayout.removeAll();
+                H5 consoleH5 = new H5("Console with test result and logs:");
+                rightModVerticalLayout.add(consoleH5, consoleTextField, urlField, viewHtmlButton, HtmlTextField);
+                rightModVerticalLayout.setPadding(false);
+                rightModVerticalLayout.getStyle().set("flex-grow", "1");
                 horizontalLayoutForModifyProject.add(leftModVerticalLayout, rightModVerticalLayout);
                 horizontalLayoutForModifyProject.setWidthFull();
                 horizontalLayoutForModifyProject.setHeightFull();
                 horizontalLayoutForModifyProject.getStyle().set("flex-grow", "1");
-                upperHorizontalLayoutForModifyProject.setWidthFull();
-                upperHorizontalLayoutForModifyProject.getStyle().set("flex-grow", "0");
-                rightModVerticalLayout.setFlexGrow(1, urlField, viewHtmlButton, textField);
+                horizontalLayoutForModifyProject.setPadding(false);
                 rightModVerticalLayout.setWidthFull();
                 rightModVerticalLayout.setHeightFull();
                 leftModVerticalLayout.setMaxWidth("300px");
                 leftModVerticalLayout.setHeightFull();
                 leftModVerticalLayout.getStyle().set("flex-grow", "1");
-                leftModVerticalLayout.add(createOperationButton);
-                upperHorizontalLayoutForModifyProject.add(updateOperationButton);
-                modifyProjectLayout.add(upperHorizontalLayoutForModifyProject);
+                leftModVerticalLayout.setPadding(false);
+                leftModVerticalLayout.add(getHtmlStartSearch, getHtmlStartSearchOffset, getHtmlEndSearch, getHtmlEndSearchOffset);
+                leftModVerticalLayout.add(updateOperationsButton, testOperationsButton);
                 modifyProjectLayout.add(horizontalLayoutForModifyProject);
+
+                getHtmlStartSearch.setValue(setParamValue("getHtmlStartSearch"));
+                getHtmlStartSearchOffset.setValue(setParamValue("getHtmlStartSearchOffset"));
+                getHtmlEndSearch.setValue(setParamValue("getHtmlEndSearch"));
+                getHtmlEndSearchOffset.setValue(setParamValue("getHtmlEndSearchOffset"));
             } else if (selectedProject == null) {
-                modifyProjectLayout.add(text);
+                modifyProjectLayout.add(selectProjectText);
                 return;
             }
 
@@ -492,10 +606,13 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
 
 
+
+
         // Now add the VerticalLayout to the "Create and select project" tab.
         tabSheet.add("Download desktop client", downloadClientLayout);
         tabSheet.add("Create and select project", createSelectProjectLayout);
         tabSheet.add("Modify project", modifyProjectLayout);
+        tabSheet.add("Run project", runProjectLayout);
 
         setGridProjectData(stripedGridProjects);
 
@@ -504,7 +621,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             if (titleTextField.isEmpty()) {
                 Notification.show("Title cannot be empty", 3000, Notification.Position.MIDDLE);
             } else {
-                Projects project = new Projects();
+                Project project = new Project();
                 project.setTitle(titleTextField.getValue());
                 project.setDescription(descriptionTextField.getValue());
                 sampleProjectService.createProject(project);
@@ -531,7 +648,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
         // Add an event listener to the "Delete project" button.
         deleteProjectButton.addClickListener(e -> {
-            selectedProject = (Projects) stripedGridProjects.asSingleSelect().getValue();
+            selectedProject = (Project) stripedGridProjects.asSingleSelect().getValue();
             if (stripedGridProjects.getSelectedItems().isEmpty()) {
                 Notification.show("No project selected", 3000, Notification.Position.MIDDLE);
             } else {
@@ -553,9 +670,9 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         });
 
         updateProjectButton.addClickListener(e -> {
-            selectedProject = (Projects) stripedGridProjects.asSingleSelect().getValue();
+            selectedProject = (Project) stripedGridProjects.asSingleSelect().getValue();
             if (selectedProject != null) {
-                Projects projectToUpdate = sampleProjectService.findById(selectedProject.getId());
+                Project projectToUpdate = sampleProjectService.findById(selectedProject.getId());
                 if (projectToUpdate != null) {
                     projectToUpdate.setTitle(titleTextField.getValue());
                     projectToUpdate.setDescription(descriptionTextField.getValue());
@@ -583,7 +700,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
 
         stripedGridProjects.asSingleSelect().addValueChangeListener(event -> {
-            selectedProject = (Projects) stripedGridProjects.asSingleSelect().getValue();
+            selectedProject = (Project) stripedGridProjects.asSingleSelect().getValue();
             if (selectedProject != null) {
                 titleTextField.setValue(selectedProject.getTitle().toString());
                 descriptionTextField.setValue(selectedProject.getDescription());
@@ -604,6 +721,30 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
 
     }
+
+
+    private String setParamValue(String param) {
+        if (selectedProject != null) {
+            String jsonData = selectedProject.getJsonData();
+            if (jsonData != null) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    JsonNode jsonNode = objectMapper.readTree(jsonData);
+                    String paramValue = jsonNode.get(param).asText();
+                    return paramValue;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                return "";
+            }
+        } else {
+            return "";
+        }
+        System.out.println("2");
+        return "";
+    }
+
 
     private void sendTestPost(String ipForREST) {
         System.out.println(ipForREST);
@@ -644,7 +785,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
     }
 
 
-    public void setSelectedProject(Projects project) {
+    public void setSelectedProject(Project project) {
         if (project == null) {
 //            throw new IllegalArgumentException("Cannot set selectedProject to null");
             System.out.println("Cannot set selectedProject to null");
@@ -672,6 +813,24 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             }
         }
         return false;
+    }
+
+    private boolean isValidUrl(String url) {
+        return url != null && (url.startsWith("http://") || url.startsWith("https://"));
+    }
+
+    public boolean isUrlValid(String url) {
+        try {
+            URL websiteUrl = new URL(url);
+            URLConnection connection = websiteUrl.openConnection();
+            connection.setConnectTimeout(3000); // Set a timeout of 3 seconds
+            connection.setReadTimeout(3000); // Set a timeout of 3 seconds
+            connection.connect();
+            return true;
+        } catch (Exception e) {
+            // Handle the exception or log the error
+            return false;
+        }
     }
 
 }
