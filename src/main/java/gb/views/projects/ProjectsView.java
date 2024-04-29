@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.nimbusds.jose.shaded.gson.Gson;
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -22,6 +23,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinRequest;
@@ -64,7 +66,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
     private TextArea descriptionTextField = new TextArea();
     private Anchor downloadButton;
     Project selectedProject = (Project) new Project();
-    private int port = 8080;
+    private int port = 8082;
     private String ipForREST;
 
     @Autowired
@@ -299,6 +301,16 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
         // Create a download client layout
         VerticalLayout downloadClientLayout = new VerticalLayout();
+        TextField portTextField = new TextField();
+        portTextField.setValue(String.valueOf(port));
+        portTextField.setLabel("Enter port");
+        portTextField.addValueChangeListener(event -> {
+            String text = event.getValue();
+            if (!text.matches("[0-9]*")) {
+                // Если введено не число, очищаем поле или возвращаем предыдущее допустимое значение
+                portTextField.setValue(event.getOldValue());
+            }
+        });
         // Download client button
         try {
             // Create a ByteArrayOutputStream to store the file content in memory
@@ -348,17 +360,16 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             downloadButton.getElement().setAttribute("download", true);
             downloadButton.add(new Button(new Icon(VaadinIcon.DOWNLOAD)));
 
-            downloadClientLayout.add(new H5("Here you can download desktop client with configuration data:"));
+            downloadClientLayout.add(new H5("Here you can download desktop client"));
             downloadClientLayout.add(downloadButton);
 
             String localIp = InetAddress.getLocalHost().getHostAddress();
             String publicIp = getPublicIp();
 
-            Anchor localIpLink = new Anchor("http://" + localIp + ":" + port, "Access via your local IP: " +
-                    localIp + ":" + port);
+            Anchor localIpLink = new Anchor("http://" + localIp, "Local IP: " + localIp);
             localIpLink.setTarget("_blank"); // Открытие ссылки в новом окне
 
-            Anchor publicIpLink = new Anchor("http://" + publicIp + ":" + port, "Access via your public IP: " + publicIp + ":" + port);
+            Anchor publicIpLink = new Anchor("http://" + publicIp, "Public IP: " + publicIp);
             publicIpLink.setTarget("_blank"); // Открытие ссылки в новом окне
 
             downloadClientLayout.add(new H5("Here is you local and public IP's:"));
@@ -371,20 +382,20 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             chooseIP.setItems("Local IP: " + localIp, "Public IP: " + publicIp);
             chooseIP.setValue("Local IP: " + localIp);
 
-            ipForREST = "http://" + localIp + ":" + port;
+            ipForREST = "http://" + localIp + ":" + portTextField.getValue();
 
             chooseIP.addValueChangeListener(event -> {
                 String selectedValue = event.getValue().toString();
                 if (selectedValue.equals("Local IP: " + localIp)) {
-                    ipForREST = "http://" + localIp + ":" + port;
+                    ipForREST = "http://" + localIp + ":" + portTextField.getValue();
                     System.out.println(ipForREST);
                 } else if (selectedValue.equals("Public IP: " + publicIp)) {
-                    ipForREST = "http://" + publicIp + ":" + port;
+                    ipForREST = "http://" + publicIp + ":" + portTextField.getValue();
                     System.out.println(ipForREST);
                 }
             });
 
-            downloadClientLayout.add(new H5("Here you can choose which IP you want to use to send REST requests:"));
+            downloadClientLayout.add(new H5("Here you can choose which IP add port you want to use to send REST requests:"));
             downloadClientLayout.add(chooseIP);
 
             Button sendTestPostButton = new Button("Send test POST");
@@ -394,9 +405,8 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             sendTestPostButton.addClickListener(e -> {
                 sendTestPost(ipForREST);
             });
+            downloadClientLayout.add(portTextField);
             downloadClientLayout.add(sendTestPostButton);
-
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -423,9 +433,11 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         urlField.setPlaceholder("Enter URL to view HTML code");
         urlField.setWidthFull();
 
-        TextArea HtmlTextField = new TextArea();
-//        HtmlTextField.setMaxHeight("490px");
-        HtmlTextField.setSizeFull();
+        TextArea htmlTextField = new TextArea();
+//        htmlTextField.setMaxHeight("490px");
+        htmlTextField.setSizeFull();
+        htmlTextField.setReadOnly(true);
+
 
         TextArea consoleTextField = new TextArea();
 //        ConsoleTextField.setMaxHeight("490px");
@@ -462,6 +474,14 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 // Если введено не число, очищаем поле или возвращаем предыдущее допустимое значение
                 getHtmlEndSearchOffset.setValue(event.getOldValue());
             }
+        });
+
+        Button calculateOffsetButton = new Button("Calculate offset");
+        calculateOffsetButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        calculateOffsetButton.setWidth("192px");
+        calculateOffsetButton.addClickListener(event -> {
+            getHtmlStartSearchOffset.setValue(String.valueOf(getHtmlStartSearch.getValue().length()));
+            getHtmlEndSearchOffset.setValue(String.valueOf(getHtmlEndSearch.getValue().length()));
         });
 
 
@@ -526,14 +546,18 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                         Connection.Response response = Jsoup.connect(url)
                                 .userAgent(userAgent) // use the user agent from the current request
                                 .referrer("http://www.google.com")
-                                .timeout(10000)
+                                .timeout(5000)
                                 .followRedirects(true)
                                 .execute();
 
-                        Document document = Jsoup.parse(response.body());
-                        String formattedHtml = document.html();
-
-                        HtmlTextField.setValue(formattedHtml);
+                        if (response.statusCode() == 200) {
+                            Document document = Jsoup.parse(response.body());
+                            String formattedHtml = document.html();
+                            htmlTextField.setValue(formattedHtml);
+                        } else {
+                            // Handle the case when the response code is not 200
+                            System.out.println("Failed to fetch URL. Response code: " + response.statusCode());
+                        }
                     } catch (SocketTimeoutException ste) {
                         // Логирование исключения или уведомление пользователя
                         System.out.println("Connection timed out. Please try again later.");
@@ -574,7 +598,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 modifyProjectLayout.setPadding(false);
                 rightModVerticalLayout.removeAll();
                 H5 consoleH5 = new H5("Console with test result and logs:");
-                rightModVerticalLayout.add(consoleH5, consoleTextField, urlField, viewHtmlButton, HtmlTextField);
+                rightModVerticalLayout.add(consoleH5, consoleTextField, urlField, viewHtmlButton, htmlTextField);
                 rightModVerticalLayout.setPadding(false);
                 rightModVerticalLayout.getStyle().set("flex-grow", "1");
                 horizontalLayoutForModifyProject.add(leftModVerticalLayout, rightModVerticalLayout);
@@ -589,7 +613,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 leftModVerticalLayout.getStyle().set("flex-grow", "1");
                 leftModVerticalLayout.setPadding(false);
                 leftModVerticalLayout.add(getHtmlStartSearch, getHtmlStartSearchOffset, getHtmlEndSearch, getHtmlEndSearchOffset);
-                leftModVerticalLayout.add(updateOperationsButton, testOperationsButton);
+                leftModVerticalLayout.add(calculateOffsetButton, updateOperationsButton, testOperationsButton);
                 modifyProjectLayout.add(horizontalLayoutForModifyProject);
 
                 getHtmlStartSearch.setValue(setParamValue("getHtmlStartSearch"));
@@ -747,7 +771,27 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
 
     private void sendTestPost(String ipForREST) {
-        System.out.println(ipForREST);
+//        System.out.println(ipForREST);
+        try {
+            URL url = new URL(ipForREST + "/hello");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+//                System.out.println("Request sent successfully to: " + ipForREST);
+                Notification.show("Request sent successfully to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+            } else {
+//                System.out.println("Failed to send request to: " + ipForREST);
+                Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+            }
+        } catch (ConnectException e) {
+            System.out.println("Connection refused: " + e.getMessage());
+            Notification.show("Connection refused: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -832,5 +876,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             return false;
         }
     }
+
 
 }

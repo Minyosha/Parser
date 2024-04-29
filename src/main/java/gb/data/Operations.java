@@ -1,6 +1,8 @@
 package gb.data;
 
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinService;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,7 +17,6 @@ import java.util.Set;
 
 public class Operations {
     static String currentArticle;
-    public static String lastLucky;
     public static String currentAdress;
 
     private static int counter = 0;
@@ -27,7 +28,8 @@ public class Operations {
     private static String getHtmlEndSearch;
     private static String getHtmlEndSearchOffset;
 
-
+    private static VaadinRequest currentRequest = VaadinService.getCurrentRequest();
+    private static String userAgent = currentRequest.getHeader("User-Agent");
 
 
     public static void runTest(Project project, TextArea consoleTextField) throws HttpStatusException {
@@ -55,26 +57,67 @@ public class Operations {
                     if (imageLink != null) {
                         currentText = consoleTextField.getValue();
                         consoleTextField.setValue(currentText + "Link for " + article.getArticle_content() + " found: " + imageLink + "\n");
-                        System.out.println(imageLink);
-//                            downloadImage(imageLink, article);
                         break;
                     } else {
                         currentText = consoleTextField.getValue();
                         consoleTextField.setValue(currentText + "Image link not found for article " + article.getArticle_content() + "\n");
-                        System.out.println("Image link not found for article " + article.getArticle_content());
                     }
                 } else {
                     currentText = consoleTextField.getValue();
                     consoleTextField.setValue(currentText + "Product URL not found for article " + article.getArticle_content() + "\n");
-                    System.out.println("Product URL not found for article " + article);
                 }
             }
             currentText = consoleTextField.getValue();
             consoleTextField.setValue(currentText + "Test completed\n");
             System.out.println("Test completed");
-//            break;
         }
     }
+
+
+    public static void startParsing(Project project, TextArea consoleTextField) throws HttpStatusException {
+
+        getParams(project);
+
+        consoleTextField.setValue("");
+        String currentText = consoleTextField.getValue();
+        consoleTextField.setValue(currentText + "Test started\n");
+        Set<Variants> variants = project.getVariants();
+        Set<Article> articles = project.getArticles();
+        for (Article article : articles) {
+            currentText = consoleTextField.getValue();
+            consoleTextField.setValue(currentText + "Trying article: " + article.getArticle_content() + "\n");
+            currentArticle = article.getArticle_content();
+
+            for (Variants variant : variants) {
+                currentText = consoleTextField.getValue();
+                consoleTextField.setValue(currentText + "Trying variant: " + variant.getVariant_content() + "\n");
+                String url = variant.getVariant_content() + article.getArticle_content();
+                currentText = consoleTextField.getValue();
+                consoleTextField.setValue(currentText + "Trying to find image link for article " + article.getArticle_content() + " with URL: " + url + "\n");
+                if (url != null) {
+                    String imageLink = getImageLink(url);
+                    if (imageLink != null) {
+                        currentText = consoleTextField.getValue();
+                        consoleTextField.setValue(currentText + "Link for " + article.getArticle_content() + " found: " + imageLink + "\n");
+                        break;
+                    } else {
+                        currentText = consoleTextField.getValue();
+                        consoleTextField.setValue(currentText + "Image link not found for article " + article.getArticle_content() + "\n");
+                    }
+                } else {
+                    currentText = consoleTextField.getValue();
+                    consoleTextField.setValue(currentText + "Product URL not found for article " + article.getArticle_content() + "\n");
+                }
+            }
+            currentText = consoleTextField.getValue();
+            consoleTextField.setValue(currentText + "Test completed\n");
+            System.out.println("Test completed");
+        }
+    }
+
+
+
+
 
     private static void getParams(Project project) {
         getHtmlStartSearch = project.getJsonData("getHtmlStartSearch");
@@ -85,7 +128,7 @@ public class Operations {
 
 
     private static String getImageLink(String productUrl) {
-        String html = getHtml(productUrl);
+        String html = getHtml(productUrl, userAgent);
         if (html == null) {
             return null;
         }
@@ -101,8 +144,6 @@ public class Operations {
             String imageLink = html.substring(startIndex, endIndex);
             System.out.println("передача ссылки");
             System.out.println(imageLink);
-            lastLucky = currentAdress;
-            System.out.println("Last lucky: " + lastLucky);
             return imageLink;
         }
         System.out.println("не передача ссылки");
@@ -110,7 +151,7 @@ public class Operations {
 
     }
 
-    private static String getHtml(String url) {
+    private static String getHtml(String url, String userAgent) {
         try {
             // Установка таймаута для HttpURLConnection
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
@@ -120,8 +161,11 @@ public class Operations {
             int responseCode = connection.getResponseCode();
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Установка таймаута для Jsoup
-                Document doc = Jsoup.connect(url).timeout(10000).get(); // Таймаут в миллисекундах
+                // Установка таймаута и User-Agent для Jsoup
+                Document doc = Jsoup.connect(url)
+                        .timeout(5000) // Таймаут в миллисекундах
+                        .userAgent(userAgent) // Использование User-Agent текущего пользователя
+                        .get();
                 String html = doc.html();
                 return html;
             } else {
@@ -133,6 +177,7 @@ public class Operations {
             return null;
         }
     }
+
 
 //    private static void downloadImage(String imageLink, String articleNumber) {
 //        try {
@@ -178,19 +223,6 @@ public class Operations {
             while ((line = reader.readLine()) != null) {
                 String article = line.trim();
                 currentArticle = article;
-
-                if (lastLucky != null) {
-                    String imageLink = getImageLink(lastLucky + prod + article);
-                    if (imageLink != null) {
-                        System.out.println(imageLink);
-//                        downloadImage(imageLink, article);
-                        downloaded = downloaded - 1;
-                    } else {
-                        System.out.println("Image link not found for article " + article);
-                    }
-                } else {
-                    System.out.println("Product URL not found for article " + article);
-                }
 
                 for (String baseUrl : arrayOfStrings) {
                     String url = baseUrl + prod + article;
