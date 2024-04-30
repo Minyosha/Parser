@@ -32,7 +32,7 @@ public class Operations {
     private static String userAgent = currentRequest.getHeader("User-Agent");
 
 
-    public static void runTest(Project project, TextArea consoleTextField) throws HttpStatusException {
+    public static void runTest(Project project, TextArea consoleTextField, int testedArticles) throws HttpStatusException {
 
         getParams(project);
 
@@ -41,7 +41,16 @@ public class Operations {
         consoleTextField.setValue(currentText + "Test started\n");
         Set<Variants> variants = project.getVariants();
         Set<Article> articles = project.getArticles();
+        boolean runOnce = false;
+        int tested = 0;
+
         for (Article article : articles) {
+            if (runOnce) {
+                break;
+            }
+            if (tested == testedArticles) {
+                break;
+            }
             currentText = consoleTextField.getValue();
             consoleTextField.setValue(currentText + "Trying article: " + article.getArticle_content() + "\n");
             currentArticle = article.getArticle_content();
@@ -51,25 +60,26 @@ public class Operations {
                 consoleTextField.setValue(currentText + "Trying variant: " + variant.getVariant_content() + "\n");
                 String url = variant.getVariant_content() + article.getArticle_content();
                 currentText = consoleTextField.getValue();
-                consoleTextField.setValue(currentText + "Trying to find image link for article " + article.getArticle_content() + " with URL: " + url + "\n");
+                consoleTextField.setValue(currentText + "Trying to find image link for article " + article.getArticle_content() + " with URL:\n" + url + "\n");
                 if (url != null) {
                     String imageLink = getImageLink(url);
                     if (imageLink != null) {
                         currentText = consoleTextField.getValue();
-                        consoleTextField.setValue(currentText + "Link for " + article.getArticle_content() + " found: " + imageLink + "\n");
+                        consoleTextField.setValue(currentText + "Link for article " + article.getArticle_content() + " found:\n" + imageLink + "\n");
+                        runOnce = true;
                         break;
                     } else {
                         currentText = consoleTextField.getValue();
-                        consoleTextField.setValue(currentText + "Image link not found for article " + article.getArticle_content() + "\n");
+                        consoleTextField.setValue(currentText + "Image link not found for article: " + article.getArticle_content() + "\n");
                     }
                 } else {
                     currentText = consoleTextField.getValue();
-                    consoleTextField.setValue(currentText + "Product URL not found for article " + article.getArticle_content() + "\n");
+                    consoleTextField.setValue(currentText + "Product URL not found for article: " + article.getArticle_content() + "\n");
                 }
             }
+            tested++;
             currentText = consoleTextField.getValue();
-            consoleTextField.setValue(currentText + "Test completed\n");
-            System.out.println("Test completed");
+            consoleTextField.setValue(currentText + "Test successfully completed with " + tested + "/" + testedArticles + " articles tested\n");
         }
     }
 
@@ -83,6 +93,7 @@ public class Operations {
         consoleTextField.setValue(currentText + "Test started\n");
         Set<Variants> variants = project.getVariants();
         Set<Article> articles = project.getArticles();
+
         for (Article article : articles) {
             currentText = consoleTextField.getValue();
             consoleTextField.setValue(currentText + "Trying article: " + article.getArticle_content() + "\n");
@@ -99,7 +110,6 @@ public class Operations {
                     if (imageLink != null) {
                         currentText = consoleTextField.getValue();
                         consoleTextField.setValue(currentText + "Link for " + article.getArticle_content() + " found: " + imageLink + "\n");
-                        break;
                     } else {
                         currentText = consoleTextField.getValue();
                         consoleTextField.setValue(currentText + "Image link not found for article " + article.getArticle_content() + "\n");
@@ -113,10 +123,8 @@ public class Operations {
             consoleTextField.setValue(currentText + "Test completed\n");
             System.out.println("Test completed");
         }
+
     }
-
-
-
 
 
     private static void getParams(Project project) {
@@ -134,19 +142,14 @@ public class Operations {
         }
 
         int startIndex = html.indexOf(getHtmlStartSearch) + Integer.parseInt(getHtmlStartSearchOffset);
-        System.out.println(startIndex);
         int endIndex = html.indexOf(getHtmlEndSearch, startIndex) + Integer.parseInt(getHtmlEndSearchOffset);
-        System.out.println(endIndex);
         if ((startIndex == -1) || (startIndex >= endIndex)) {
             return null;
         }
         if (startIndex + 200 > endIndex) {
             String imageLink = html.substring(startIndex, endIndex);
-            System.out.println("передача ссылки");
-            System.out.println(imageLink);
             return imageLink;
         }
-        System.out.println("не передача ссылки");
         return null;
 
     }
@@ -169,7 +172,6 @@ public class Operations {
                 String html = doc.html();
                 return html;
             } else {
-                System.out.println("Страница не найдена");
                 return null;
             }
         } catch (IOException e) {
@@ -199,62 +201,5 @@ public class Operations {
 //    }
 
 
-
-
-    public static void run1Test(Project project) throws HttpStatusException {
-        String prod = "product/";
-        String folderPath = "SE";
-        String fileName = "Report.txt";
-        Set<Variants> variants = project.getVariants();
-        Set<Article> articles = project.getArticles();
-
-        String[] arrayOfStrings = {"https://www.se.com/ww/en/",
-                "https://www.se.com/ww/fr/",
-                "https://www.se.com/br/pt/"
-
-        };
-
-
-        try {
-            File file = new File(folderPath, fileName);
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                String article = line.trim();
-                currentArticle = article;
-
-                for (String baseUrl : arrayOfStrings) {
-                    String url = baseUrl + prod + article;
-                    currentAdress = baseUrl;
-                    System.out.println(url);
-
-                    if (url != null) {
-                        String imageLink = getImageLink(url);
-                        if (imageLink != null) {
-                            System.out.println(imageLink);
-//                            downloadImage(imageLink, article);
-                            System.out.println(imageLink);
-                            break;
-                        } else {
-                            System.out.println("Image link not found for article " + article);
-                        }
-                    } else {
-                        System.out.println("Product URL not found for article " + article);
-                    }
-                }
-                counter = counter + 1;
-                System.out.println("Downloaded: " + downloaded);
-                System.out.println("Total: " + counter);
-                System.out.println("Success rate: " + (downloaded * 100 / counter) + "%");
-
-
-            }
-
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
 }

@@ -68,6 +68,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
     Project selectedProject = (Project) new Project();
     private int port = 8082;
     private String ipForREST;
+    private boolean isTestRunning = false;
 
     @Autowired
     private ProjectsService sampleProjectService;
@@ -103,10 +104,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
 
     private void setTabSheetSampleData(TabSheet tabSheet) {
-        titleTextField.setLabel("Title");
-        titleTextField.setMaxHeight("200px");
-        descriptionTextField.setLabel("Description");
-        descriptionTextField.setMaxHeight("300px");
 
         // Create button
         Button createProjectButton = new Button("Create project");
@@ -515,6 +512,21 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
         });
 
+
+        TextField numberOfTestedArticles = new TextField();
+        numberOfTestedArticles.setLabel("How many articles to test?");
+        numberOfTestedArticles.setWidth("192px");
+        numberOfTestedArticles.setValue("1");
+        numberOfTestedArticles.setPattern("[1-9]|10");
+        numberOfTestedArticles.setErrorMessage("Please enter a number from 1 to 10");
+        numberOfTestedArticles.addValueChangeListener(event -> {
+            String text = event.getValue();
+            if (!text.matches("[1-9]|10")) {
+                // Если введено не число от 1 до 10, очищаем поле или возвращаем предыдущее допустимое значение
+                numberOfTestedArticles.setValue(event.getOldValue());
+            }
+        });
+
         Button testOperationsButton = new Button("Test operations");
         testOperationsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         testOperationsButton.setWidth("192px");
@@ -523,11 +535,16 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             updateOperationsButton.click();
             try {
                 selectedProject = sampleProjectService.findById(selectedProject.getId());
-                Operations.runTest(selectedProject, consoleTextField);
+                int howManyTestedArticles = Integer.parseInt(numberOfTestedArticles.getValue());
+                Operations.runTest(selectedProject, consoleTextField, howManyTestedArticles);
+                isTestRunning = true;
             } catch (HttpStatusException ex) {
                 throw new RuntimeException(ex);
+            } finally {
+                isTestRunning = false;
             }
         });
+
 
 
 
@@ -596,6 +613,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 modifyProjectLayout.removeAll();
                 modifyProjectLayout.add(selectProjectText);
                 modifyProjectLayout.setPadding(false);
+                modifyProjectLayout.add(horizontalLayoutForModifyProject);
                 rightModVerticalLayout.removeAll();
                 H5 consoleH5 = new H5("Console with test result and logs:");
                 rightModVerticalLayout.add(consoleH5, consoleTextField, urlField, viewHtmlButton, htmlTextField);
@@ -612,10 +630,9 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 leftModVerticalLayout.setHeightFull();
                 leftModVerticalLayout.getStyle().set("flex-grow", "1");
                 leftModVerticalLayout.setPadding(false);
-                leftModVerticalLayout.add(getHtmlStartSearch, getHtmlStartSearchOffset, getHtmlEndSearch, getHtmlEndSearchOffset);
-                leftModVerticalLayout.add(calculateOffsetButton, updateOperationsButton, testOperationsButton);
-                modifyProjectLayout.add(horizontalLayoutForModifyProject);
-
+                leftModVerticalLayout.removeAll();
+                leftModVerticalLayout.add(getHtmlStartSearch, getHtmlStartSearchOffset, getHtmlEndSearch, getHtmlEndSearchOffset,
+                        calculateOffsetButton, updateOperationsButton, numberOfTestedArticles, testOperationsButton);
                 getHtmlStartSearch.setValue(setParamValue("getHtmlStartSearch"));
                 getHtmlStartSearchOffset.setValue(setParamValue("getHtmlStartSearchOffset"));
                 getHtmlEndSearch.setValue(setParamValue("getHtmlEndSearch"));
