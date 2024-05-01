@@ -155,6 +155,7 @@ public class Operations {
     }
 
     private static String getHtml(String url, String userAgent) {
+//        System.out.println(userAgent);
         try {
             // Установка таймаута для HttpURLConnection
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();

@@ -2,10 +2,7 @@ package gb.views.projects;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.nimbusds.jose.shaded.gson.Gson;
-import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -23,7 +20,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinRequest;
@@ -47,7 +43,6 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import org.springframework.data.domain.PageRequest;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.net.*;
 import java.util.Collections;
 import java.util.HashMap;
@@ -599,6 +594,55 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         runProjectLayout.setHeightFull();
         runProjectLayout.getStyle().set("flex-grow", "1");
 
+        HorizontalLayout horizontalLayoutForRunProject = new HorizontalLayout();
+        horizontalLayoutForRunProject.setWidthFull();
+        horizontalLayoutForRunProject.setHeightFull();
+        horizontalLayoutForRunProject.getStyle().set("flex-grow", "1");
+
+        VerticalLayout leftRunVerticalLayout = new VerticalLayout();
+        leftRunVerticalLayout.setWidthFull();
+        leftRunVerticalLayout.setHeightFull();
+        leftRunVerticalLayout.getStyle().set("flex-grow", "1");
+
+        VerticalLayout middleRunVerticalLayout = new VerticalLayout();
+        middleRunVerticalLayout.setWidthFull();
+        middleRunVerticalLayout.setHeightFull();
+        middleRunVerticalLayout.getStyle().set("flex-grow", "1");
+
+        VerticalLayout rightRunVerticalLayout = new VerticalLayout();
+        rightRunVerticalLayout.setWidthFull();
+        rightRunVerticalLayout.setHeightFull();
+        rightRunVerticalLayout.getStyle().set("flex-grow", "1");
+
+        TextField fileExtension = new TextField();
+        fileExtension.setLabel("Enter file extension");
+        fileExtension.setWidth("192px");
+
+        Button runProjectButton = new Button("Update");
+        runProjectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        runProjectButton.setWidth("192px");
+        runProjectButton.addClickListener(e -> {
+            sendUpdatePost(ipForREST, selectedProject, fileExtension.getValue());
+        });
+
+        Button pauseProjectButton = new Button("Pause");
+        pauseProjectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        pauseProjectButton.setWidth("192px");
+        pauseProjectButton.addClickListener(e -> {
+            sendPausePost(ipForREST, selectedProject);
+        });
+
+        Button runResumeProjectButton = new Button("Run / Resume");
+        runResumeProjectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        runResumeProjectButton.setWidth("192px");
+        runResumeProjectButton.addClickListener(e -> {
+            sendRunPost(ipForREST, selectedProject);
+        });
+
+        Button createReportButton = new Button("Create report");
+        createReportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createReportButton.setWidth("192px");
+
 
 
 
@@ -609,6 +653,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             modifyProjectLayout.add(selectProjectText);
             runProjectLayout.add(selectProjectText);
             if (selectedProject.getTitle() != null) {
+                // Create a modify project layout
                 selectProjectText = ("On this page you can modify project " + selectedProject.getTitle() + ": " + selectedProject.getDescription());
                 modifyProjectLayout.removeAll();
                 modifyProjectLayout.add(selectProjectText);
@@ -637,6 +682,49 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 getHtmlStartSearchOffset.setValue(setParamValue("getHtmlStartSearchOffset"));
                 getHtmlEndSearch.setValue(setParamValue("getHtmlEndSearch"));
                 getHtmlEndSearchOffset.setValue(setParamValue("getHtmlEndSearchOffset"));
+
+
+                // Run project layout
+                runProjectLayout.removeAll();
+                String runProjectText = new String ("On this page you can run project " +
+                        selectedProject.getTitle() + ": " + selectedProject.getDescription());
+                runProjectLayout.add(runProjectText);
+//                runProjectLayout.add(horizontalLayoutForRunProject);
+//                horizontalLayoutForRunProject.removeAll();
+
+                String localIp = null;
+                try {
+                    localIp = InetAddress.getLocalHost().getHostAddress();
+                } catch (UnknownHostException e) {
+                    throw new RuntimeException(e);
+                }
+                String publicIp = getPublicIp();
+                RadioButtonGroup chooseIP = new RadioButtonGroup();
+                chooseIP.setItems("Local IP: " + localIp, "Public IP: " + publicIp);
+                chooseIP.setValue("Local IP: " + localIp);
+
+                runProjectLayout.add(new H5("Here you can select IP and port to use:"));
+                runProjectLayout.add(chooseIP);
+
+                Button sendTestPostButton = new Button("Send test POST");
+                sendTestPostButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+                sendTestPostButton.setWidth("192px");
+
+                sendTestPostButton.addClickListener(e -> {
+                    sendTestPost(ipForREST);
+                });
+                runProjectLayout.add(portTextField);
+                runProjectLayout.add(sendTestPostButton);
+                runProjectLayout.add(new H5("Here you can run you project and get report:"));
+
+
+                runProjectLayout.add(fileExtension, runProjectButton, runResumeProjectButton, pauseProjectButton, createReportButton);
+//                horizontalLayoutForRunProject.add(leftRunVerticalLayout, middleRunVerticalLayout, rightRunVerticalLayout);
+
+
+
+
+
             } else if (selectedProject == null) {
                 modifyProjectLayout.add(selectProjectText);
                 return;
@@ -893,6 +981,101 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             return false;
         }
     }
+
+    private void sendUpdatePost(String ipForREST, Project selectedProject, String fileExtension) {
+        try {
+            // Create a new PostData object with the lists you want to send
+            PostData postData = new PostData(selectedProject, fileExtension);
+
+            URL url = new URL(ipForREST + "/project?update");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+
+            // Convert your data to JSON
+            Gson gson = new Gson();
+            String json = gson.toJson(postData);
+
+            // Send POST request
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.getOutputStream().write(json.getBytes("UTF-8"));
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                Notification.show("Project updated successfully", 5000, Notification.Position.MIDDLE);
+            } else {
+                Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+            }
+        } catch (ConnectException e) {
+            System.out.println("Connection refused: " + e.getMessage());
+            Notification.show("Connection refused: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendRunPost(String ipForREST, Project selectedProject) {
+        try {
+
+            URL url = new URL(ipForREST + "/project?run");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+
+            // Convert your data to JSON
+            Gson gson = new Gson();
+            String json = gson.toJson(selectedProject.getTitle());
+
+            // Send POST request
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.getOutputStream().write(json.getBytes("UTF-8"));
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                Notification.show("Files started to download", 5000, Notification.Position.MIDDLE);
+            } else {
+                Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+            }
+        } catch (ConnectException e) {
+            System.out.println("Connection refused: " + e.getMessage());
+            Notification.show("Connection refused: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void sendPausePost(String ipForREST, Project selectedProject) {
+        try {
+
+            URL url = new URL(ipForREST + "/project?pause");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            String sendedData = selectedProject.getTitle().toString();
+
+            // Convert your data to JSON
+            Gson gson = new Gson();
+            String json = gson.toJson(sendedData);
+
+            // Send POST request
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.getOutputStream().write(json.getBytes("UTF-8"));
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                Notification.show("Request sent successfully to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+            } else {
+                Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+            }
+        } catch (ConnectException e) {
+            System.out.println("Connection refused: " + e.getMessage());
+            Notification.show("Connection refused: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }
