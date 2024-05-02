@@ -29,7 +29,7 @@ public class Operations {
     private static String getHtmlEndSearchOffset;
 
     private static VaadinRequest currentRequest = VaadinService.getCurrentRequest();
-    private static String userAgent = currentRequest.getHeader("User-Agent");
+    public static String userAgent = currentRequest.getHeader("User-Agent");
 
 
     public static void runTest(Project project, TextArea consoleTextField, int testedArticles) throws HttpStatusException {

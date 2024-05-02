@@ -324,14 +324,25 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             zos.putNextEntry(new ZipEntry("Parser/"));
             zos.closeEntry();
 
-            // Create the "data.sql" file in memory
-            String sqlContent = "Your SQL content here";
-            zos.putNextEntry(new ZipEntry("Parser/data.sql"));
-            zos.write(sqlContent.getBytes());
-            zos.closeEntry();
+            // Add the "Parser.jar" file from "resources" directory
+            InputStream fis = getClass().getClassLoader().getResourceAsStream("Parser.jar");
+            if (fis != null) {
+                zos.putNextEntry(new ZipEntry("Parser/Parser.jar"));
+
+                byte[] bytes = new byte[1024];
+                int length;
+                while ((length = fis.read(bytes)) >= 0) {
+                    zos.write(bytes, 0, length);
+                }
+                zos.closeEntry();
+                fis.close();
+            } else {
+                // Handle the case where the file doesn't exist
+                System.out.println("Couldn't find file Parser.jar in resources");
+            }
 
             // Create the "client.txt" file in memory
-            String clientText = this.authenticatedUser.get().get().getUsername() + "\n" + this.authenticatedUser.get().get().getHashedPassword() + "\n" + InetAddress.getLocalHost().getHostAddress() + ":" + port + "\n" + getPublicIp() + ":" + port;
+            String clientText = "Greetings!";
             zos.putNextEntry(new ZipEntry("Parser/client.txt"));
             zos.write(clientText.getBytes());
             zos.closeEntry();
@@ -639,9 +650,13 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             sendRunPost(ipForREST, selectedProject);
         });
 
-        Button createReportButton = new Button("Create report");
+        Button createReportButton = new Button("Open report");
         createReportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createReportButton.setWidth("192px");
+        createReportButton.addClickListener(e -> {
+            sendReportPost(ipForREST, selectedProject);
+        });
+
 
 
 
@@ -876,7 +891,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
 
     private void sendTestPost(String ipForREST) {
-//        System.out.println(ipForREST);
         try {
             URL url = new URL(ipForREST + "/hello");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -885,10 +899,8 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-//                System.out.println("Request sent successfully to: " + ipForREST);
                 Notification.show("Request sent successfully to: " + ipForREST, 5000, Notification.Position.MIDDLE);
             } else {
-//                System.out.println("Failed to send request to: " + ipForREST);
                 Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
             }
         } catch (ConnectException e) {
@@ -1023,8 +1035,12 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             connection.setDoOutput(true);
 
             // Convert your data to JSON
+            HashMap<String, String> data = new HashMap<>();
+            data.put("title", selectedProject.getTitle());
+            data.put("userAgent", Operations.userAgent);
+
             Gson gson = new Gson();
-            String json = gson.toJson(selectedProject.getTitle());
+            String json = gson.toJson(data);
 
             // Send POST request
             connection.setRequestProperty("Content-Type", "application/json");
@@ -1032,7 +1048,18 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                Notification.show("Files started to download", 5000, Notification.Position.MIDDLE);
+                // Read response from the server
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseString = response.toString();
+                Notification.show(responseString, 5000, Notification.Position.MIDDLE);
             } else {
                 Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
             }
@@ -1064,7 +1091,18 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                Notification.show("Request sent successfully to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+                // Read response from the server
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseString = response.toString();
+                Notification.show(responseString, 5000, Notification.Position.MIDDLE);
             } else {
                 Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
             }
@@ -1074,6 +1112,60 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void sendReportPost(String ipForREST, Project selectedProject) {
+        try {
+
+            URL url = new URL(ipForREST + "/project?report");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            String sendedData = selectedProject.getTitle().toString();
+            Map<String, String> dataMap = new HashMap<>();
+            dataMap.put("title", sendedData);
+
+            // Convert your data to JSON
+            Gson gson = new Gson();
+            String json = gson.toJson(dataMap);
+
+            // Send POST request
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.getOutputStream().write(json.getBytes("UTF-8"));
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Read response from the server
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseString = response.toString();
+                Notification.show(responseString, 5000, Notification.Position.MIDDLE);
+            } else {
+                Notification.show("Failed to send request to: " + ipForREST, 5000, Notification.Position.MIDDLE);
+            }
+        } catch (ConnectException e) {
+            System.out.println("Connection refused: " + e.getMessage());
+            Notification.show("Connection refused: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+
+
+
+
+
+
+
     }
 
 
