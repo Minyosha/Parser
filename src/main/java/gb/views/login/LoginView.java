@@ -2,6 +2,7 @@ package gb.views.login;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -45,8 +46,19 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 currentUI.navigate("register");
             }
         });
+        registerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        registerButton.setWidth("192px");
 
-        add(new H1("Welcome to Parser!"), login, registerButton);
+        Button aboutButton = new Button("Read about project", e -> {
+            UI currentUI = UI.getCurrent();
+            if (currentUI != null) {
+                currentUI.navigate("about-view");
+            }
+        });
+        aboutButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        aboutButton.setWidth("192px");
+
+        add(new H1("Welcome to Parser!"), login, registerButton, aboutButton);
     }
 
 
