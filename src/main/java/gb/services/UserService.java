@@ -54,8 +54,6 @@ public class UserService {
     }
 
 
-
-
     public Page<User> filteredList(List<String> filterValues, Pageable pageable) {
         Specification<User> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -91,18 +89,6 @@ public class UserService {
 
         return repository.findAll(spec, pageable);
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

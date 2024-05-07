@@ -1,9 +1,12 @@
 # Parser
 
-This project can be used as a starting point to create your own Vaadin application with Spring Boot.
-It contains all the necessary configuration and some placeholder files to get you started.
+This project can be used to parse HTML-pages and download files from them.
 
-## Running the application
+## Запуск приложения
+После первого запуска и инициализации базы данных необходимо в файле application.properties закомментировать строку:
+spring.sql.init.mode = true
+Это необходимо сделать, чтобы спринг не пытался повторно заполнить базу данных значениями при запуске сервера, что вызывает ошибку.
+
 
 The project is a standard Maven project. To run it from the command line,
 type `mvnw` (Windows), or `./mvnw` (Mac & Linux), then open

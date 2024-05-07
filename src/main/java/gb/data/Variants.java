@@ -34,8 +34,6 @@ public class Variants {
         this.project = project;
     }
 
-    // геттеры, сеттеры и т.д.
-
     public Long getId() {
         return id;
     }

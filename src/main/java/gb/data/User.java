@@ -22,8 +22,7 @@ public class User extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<Role> roles;
-    @Column(unique = true)
-//    private String accessToken;
+
 
     public String getUsername() {
         return username;
@@ -72,8 +71,4 @@ public class User extends AbstractEntity {
     public boolean isBanned() {
         return banned;
     }
-
-//    public String getAccessToken() {return accessToken;}
-//
-//    public void setAccessToken(String accessToken) {this.accessToken = accessToken;}
 }

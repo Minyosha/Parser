@@ -84,52 +84,40 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         this.authenticatedUser = authenticatedUser;
 
         getContent().setWidth("100%");
-        getContent().setHeight("100%"); // Установите высоту в 100%
+        getContent().setHeight("100%");
         getContent().getStyle().set("flex-grow", "1");
 
         TabSheet tabSheet = new TabSheet();
-        tabSheet.setSizeFull(); // Установите размер во весь доступный размер
+        tabSheet.setSizeFull();
         tabSheet.getStyle().set("flex-grow", "1");
         setTabSheetSampleData(tabSheet);
         getContent().add(tabSheet);
-//        tabSheet.addSelectedChangeListener(event -> {
-//            System.out.println(selectedProject.getTitle());
-//        });
     }
 
 
     private void setTabSheetSampleData(TabSheet tabSheet) {
 
-        // Create button
         Button createProjectButton = new Button("Create project");
         createProjectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createProjectButton.setWidth("192px");
 
-        // Update button
         Button updateProjectButton = new Button("Update project");
         updateProjectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         updateProjectButton.setWidth("192px");
 
-        // Delete button
         Button deleteProjectButton = new Button("Delete project");
         deleteProjectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         deleteProjectButton.setWidth("192px");
 
-        // Select project and go to modify page
         Button openProjectButton = new Button("Open project");
         openProjectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         openProjectButton.setWidth("192px");
 
-        // Create a Grid.
         Grid stripedGridProjects = new Grid(Project.class);
         stripedGridProjects.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         stripedGridProjects.setHeightFull();
         stripedGridProjects.setWidthFull();
         stripedGridProjects.getStyle().set("flex-grow", "1");
-
-
-
-
 
         Grid<String> strippedGridArticles = new Grid<>(String.class);
         strippedGridArticles.removeAllColumns();
@@ -147,12 +135,11 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         Button pasteArticlesButton = new Button("Paste articles");
         pasteArticlesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         pasteArticlesButton.setEnabled(false);
-//        pasteArticlesButton.setWidth("192px");
 
         pasteArticlesButton.addClickListener(e -> {
             if (selectedProject != null) {
                 String text = pasteArticlesTextField.getValue();
-                String[] articles = text.trim().split("\\s+"); // добавили .trim()
+                String[] articles = text.trim().split("\\s+");
                 for (String article : articles) {
                     if (!isDuplicateArticle(article)) {
                         articleService.save(new Article(selectedProject, article));
@@ -167,7 +154,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             pasteArticlesTextField.clear();
         });
 
-        Button deleteArticlesButton = new Button("Delete all articles"); // Add a button to delete an article
+        Button deleteArticlesButton = new Button("Delete all articles");
         deleteArticlesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         deleteArticlesButton.setWidth("192px");
         deleteArticlesButton.setEnabled(false);
@@ -191,9 +178,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         verticalLayoutForArticles.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
         verticalLayoutForArticles.add(strippedGridArticles, pasteArticlesTextField, pasteArticlesButton, deleteArticlesButton);
 
-
-
-
         Grid<String> strippedGridVariants = new Grid<>(String.class);
         strippedGridVariants.removeAllColumns();
         strippedGridVariants.addColumn(str -> str).setHeader("Site Variants");
@@ -208,18 +192,15 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         pasteVariantsTextField.setLabel("Type/Paste variants separated by spaces");
 
 
-        Button pasteVariantsButton = new Button("Paste site variants"); // Add a button to delete an article
+        Button pasteVariantsButton = new Button("Paste site variants");
         pasteVariantsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         pasteVariantsButton.setEnabled(false);
-//        pasteVariantsButton.setWidth("192px");
-
-
 
 
         pasteVariantsButton.addClickListener(e -> {
             if (selectedProject != null) {
                 String text = pasteVariantsTextField.getValue();
-                String[] variants = text.trim().split("\\s+"); // добавили .trim()
+                String[] variants = text.trim().split("\\s+");
                 for (String variant : variants) {
                     if (!isDuplicateVariant(variant)) {
                         variantsService.save(new Variants(selectedProject, variant));
@@ -235,7 +216,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         });
 
 
-        Button deleteVariantsButton = new Button("Delete all site variants"); // Add a button to delete an article
+        Button deleteVariantsButton = new Button("Delete all site variants");
         deleteVariantsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         deleteVariantsButton.setEnabled(false);
         deleteVariantsButton.setWidth("192px");
@@ -252,7 +233,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         });
 
 
-
         VerticalLayout verticalLayoutForVariants = new VerticalLayout();
         verticalLayoutForVariants.setWidthFull();
         verticalLayoutForVariants.setHeightFull();
@@ -262,36 +242,28 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         verticalLayoutForVariants.add(strippedGridVariants, pasteVariantsTextField, pasteVariantsButton, deleteVariantsButton);
 
 
-        // Create a VerticalLayout to stack components vertically.
         VerticalLayout createSelectProjectLayout = new VerticalLayout();
-//        createSelectProjectLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
         createSelectProjectLayout.setHeightFull();
         createSelectProjectLayout.setWidthFull();
         createSelectProjectLayout.add(new Text("On this page you can create, delete and select project to modify"));
-//        createSelectProjectLayout.getStyle().set("flex-grow", "1");
-//        createSelectProjectLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.START);
 
-        // Create a HorizontalLayout to stack components horizontally.
         HorizontalLayout horizontalLayoutForCreateAndSelect = new HorizontalLayout();
-        horizontalLayoutForCreateAndSelect.setWidthFull(); // Set width to full
+        horizontalLayoutForCreateAndSelect.setWidthFull();
         horizontalLayoutForCreateAndSelect.setHeightFull();
         horizontalLayoutForCreateAndSelect.getStyle().set("flex-grow", "1");
 
         createSelectProjectLayout.add(horizontalLayoutForCreateAndSelect);
 
         VerticalLayout verticalLayoutForCreatingProject = new VerticalLayout();
-        verticalLayoutForCreatingProject.setWidthFull(); // Set width to full
+        verticalLayoutForCreatingProject.setWidthFull();
         verticalLayoutForCreatingProject.setHeightFull();
         verticalLayoutForCreatingProject.getStyle().set("flex-grow", "1");
-
 
         verticalLayoutForCreatingProject.add(titleTextField, descriptionTextField, createProjectButton, updateProjectButton, openProjectButton, deleteProjectButton);
         verticalLayoutForCreatingProject.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
         verticalLayoutForCreatingProject.setMaxWidth("220px");
         horizontalLayoutForCreateAndSelect.add(verticalLayoutForCreatingProject, stripedGridProjects, verticalLayoutForArticles, verticalLayoutForVariants);
 
-
-        // Create a download client layout
         VerticalLayout downloadClientLayout = new VerticalLayout();
         TextField portTextField = new TextField();
         portTextField.setValue(String.valueOf(port));
@@ -299,32 +271,24 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         portTextField.addValueChangeListener(event -> {
             String text = event.getValue();
             if (!text.matches("[0-9]*")) {
-                // Если введено не число, очищаем поле или возвращаем предыдущее допустимое значение
                 portTextField.setValue(event.getOldValue());
             }
         });
-        // Download client button
         try {
-            // Create a ByteArrayOutputStream to store the file content in memory
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            // Create a ZipOutputStream to create the zip file
             ZipOutputStream zos = new ZipOutputStream(baos);
 
-            // Add a cleanup mechanism to close the ZipOutputStream when the user navigates away from the page
             addDetachListener(event -> {
                 try {
                     zos.close();
                 } catch (IOException e) {
-                    // Handle the exception
                 }
             });
 
-            // Create the "Parser" directory in memory
             zos.putNextEntry(new ZipEntry("Parser/"));
             zos.closeEntry();
 
-            // Add the "Parser.jar" file from "resources" directory
             InputStream fis = getClass().getClassLoader().getResourceAsStream("Parser.jar");
             if (fis != null) {
                 zos.putNextEntry(new ZipEntry("Parser/Parser.jar"));
@@ -337,28 +301,22 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 zos.closeEntry();
                 fis.close();
             } else {
-                // Handle the case where the file doesn't exist
                 System.out.println("Couldn't find file Parser.jar in resources");
             }
 
-            // Create the "client.txt" file in memory
             String clientText = "Greetings!";
             zos.putNextEntry(new ZipEntry("Parser/client.txt"));
             zos.write(clientText.getBytes());
             zos.closeEntry();
 
-            // Close the ZipOutputStream
             zos.close();
 
-            // Get the byte array containing the zip file content
             byte[] zipContent = baos.toByteArray();
 
-            // Prepare the StreamResource for download
             StreamResource resource = new StreamResource("Parser.zip", () -> {
                 return new ByteArrayInputStream(zipContent);
             });
 
-            // Initialize the download button
             downloadButton = new Anchor(resource, "Download Parser.zip");
             downloadButton.getElement().setAttribute("download", true);
             downloadButton.add(new Button(new Icon(VaadinIcon.DOWNLOAD)));
@@ -417,8 +375,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             getContent().add(String.valueOf(errorLabel));
         }
 
-
-        // Create a modify project layout
         VerticalLayout modifyProjectLayout = new VerticalLayout();
         modifyProjectLayout.setWidthFull(); // Set width to full
         modifyProjectLayout.setHeightFull();
@@ -428,28 +384,19 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         VerticalLayout leftModVerticalLayout = new VerticalLayout();
         VerticalLayout rightModVerticalLayout = new VerticalLayout();
 
-
-
-
-
         TextField urlField = new TextField();
         urlField.setPlaceholder("Enter URL to view HTML code");
         urlField.setWidthFull();
 
         TextArea htmlTextField = new TextArea();
-//        htmlTextField.setMaxHeight("490px");
         htmlTextField.setSizeFull();
         htmlTextField.setReadOnly(true);
 
-
         TextArea consoleTextField = new TextArea();
-//        ConsoleTextField.setMaxHeight("490px");
         consoleTextField.setSizeFull();
-
 
         TextField getHtmlStartSearch = new TextField();
         getHtmlStartSearch.setLabel("Start search with this:");
-
 
         TextField getHtmlStartSearchOffset = new TextField();
         getHtmlStartSearchOffset.setLabel("Enter offset");
@@ -458,14 +405,12 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         getHtmlStartSearchOffset.addValueChangeListener(event -> {
             String text = event.getValue();
             if (!text.matches("[0-9]*")) {
-                // Если введено не число, очищаем поле или возвращаем предыдущее допустимое значение
                 getHtmlStartSearchOffset.setValue(event.getOldValue());
             }
         });
 
         TextField getHtmlEndSearch = new TextField();
         getHtmlEndSearch.setLabel("End search with this:");
-
 
         TextField getHtmlEndSearchOffset = new TextField();
         getHtmlEndSearchOffset.setLabel("Enter offset");
@@ -474,7 +419,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         getHtmlEndSearchOffset.addValueChangeListener(event -> {
             String text = event.getValue();
             if (!text.matches("[0-9]*")) {
-                // Если введено не число, очищаем поле или возвращаем предыдущее допустимое значение
                 getHtmlEndSearchOffset.setValue(event.getOldValue());
             }
         });
@@ -486,11 +430,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             getHtmlStartSearchOffset.setValue(String.valueOf(getHtmlStartSearch.getValue().length()));
             getHtmlEndSearchOffset.setValue(String.valueOf(getHtmlEndSearch.getValue().length()));
         });
-
-
-
-
-
 
         Button updateOperationsButton = new Button("Update operations");
         updateOperationsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -509,7 +448,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             parameters.put("getHtmlEndSearch", getHtmlEndSearchValue);
             parameters.put("getHtmlEndSearchOffset", getHtmlEndSearchOffsetValue);
 
-            // Convert the map to JSON using Gson
             Gson gson = new Gson();
             String jsonData = gson.toJson(parameters);
 
@@ -517,7 +455,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             sampleProjectService.update(projectToUpdate);
 
         });
-
 
         TextField numberOfTestedArticles = new TextField();
         numberOfTestedArticles.setLabel("How many articles to test?");
@@ -528,7 +465,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         numberOfTestedArticles.addValueChangeListener(event -> {
             String text = event.getValue();
             if (!text.matches("[1-9]|10")) {
-                // Если введено не число от 1 до 10, очищаем поле или возвращаем предыдущее допустимое значение
                 numberOfTestedArticles.setValue(event.getOldValue());
             }
         });
@@ -551,9 +487,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             }
         });
 
-
-
-
         Button viewHtmlButton = new Button("View HTML code");
         viewHtmlButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         viewHtmlButton.setWidth("192px");
@@ -567,7 +500,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 if (isUrlValid(url)) {
                     try {
                         Connection.Response response = Jsoup.connect(url)
-                                .userAgent(userAgent) // use the user agent from the current request
+                                .userAgent(userAgent)
                                 .referrer("http://www.google.com")
                                 .timeout(5000)
                                 .followRedirects(true)
@@ -578,11 +511,9 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                             String formattedHtml = document.html();
                             htmlTextField.setValue(formattedHtml);
                         } else {
-                            // Handle the case when the response code is not 200
                             System.out.println("Failed to fetch URL. Response code: " + response.statusCode());
                         }
                     } catch (SocketTimeoutException ste) {
-                        // Логирование исключения или уведомление пользователя
                         System.out.println("Connection timed out. Please try again later.");
                     } catch (IOException ex) {
                         ex.printStackTrace();
@@ -599,9 +530,8 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             }
         });
 
-        // Create a run project layout
         VerticalLayout runProjectLayout = new VerticalLayout();
-        runProjectLayout.setWidthFull(); // Set width to full
+        runProjectLayout.setWidthFull();
         runProjectLayout.setHeightFull();
         runProjectLayout.getStyle().set("flex-grow", "1");
 
@@ -657,18 +587,13 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             sendReportPost(ipForREST, selectedProject);
         });
 
-
-
-
-
         tabSheet.addSelectedChangeListener(event -> {
-            modifyProjectLayout.removeAll(); // Очистить содержимое layout
+            modifyProjectLayout.removeAll();
             runProjectLayout.removeAll();
             String selectProjectText = new String("Select a project to modify from the \"Create and select project\" tab");
             modifyProjectLayout.add(selectProjectText);
             runProjectLayout.add(selectProjectText);
             if (selectedProject.getTitle() != null) {
-                // Create a modify project layout
                 selectProjectText = ("On this page you can modify project " + selectedProject.getTitle() + ": " + selectedProject.getDescription());
                 modifyProjectLayout.removeAll();
                 modifyProjectLayout.add(selectProjectText);
@@ -698,15 +623,10 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 getHtmlEndSearch.setValue(setParamValue("getHtmlEndSearch"));
                 getHtmlEndSearchOffset.setValue(setParamValue("getHtmlEndSearchOffset"));
 
-
-                // Run project layout
                 runProjectLayout.removeAll();
-                String runProjectText = new String ("On this page you can run project " +
+                String runProjectText = new String("On this page you can run project " +
                         selectedProject.getTitle() + ": " + selectedProject.getDescription());
                 runProjectLayout.add(runProjectText);
-//                runProjectLayout.add(horizontalLayoutForRunProject);
-//                horizontalLayoutForRunProject.removeAll();
-
                 String localIp = null;
                 try {
                     localIp = InetAddress.getLocalHost().getHostAddress();
@@ -732,27 +652,14 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 runProjectLayout.add(sendTestPostButton);
                 runProjectLayout.add(new H5("Here you can run you project and get report:"));
 
-
                 runProjectLayout.add(fileExtension, runProjectButton, runResumeProjectButton, pauseProjectButton, createReportButton);
-//                horizontalLayoutForRunProject.add(leftRunVerticalLayout, middleRunVerticalLayout, rightRunVerticalLayout);
-
-
-
-
-
             } else if (selectedProject == null) {
                 modifyProjectLayout.add(selectProjectText);
                 return;
             }
-
         });
 
 
-
-
-
-
-        // Now add the VerticalLayout to the "Create and select project" tab.
         tabSheet.add("Download desktop client", downloadClientLayout);
         tabSheet.add("Create and select project", createSelectProjectLayout);
         tabSheet.add("Modify project", modifyProjectLayout);
@@ -760,7 +667,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
         setGridProjectData(stripedGridProjects);
 
-        // Add an event listener to the "Create project" button.
         createProjectButton.addClickListener(e -> {
             if (titleTextField.isEmpty()) {
                 Notification.show("Title cannot be empty", 3000, Notification.Position.MIDDLE);
@@ -780,23 +686,21 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             }
         });
 
-        // Add an event listener to the "Open project" button.
+
         openProjectButton.addClickListener(e -> {
             if (selectedProject == null) {
                 Notification.show("No project selected", 3000, Notification.Position.MIDDLE);
             } else {
-                tabSheet.setSelectedIndex(2); // Index of the third tab (0-based)
+                tabSheet.setSelectedIndex(2);
             }
-
         });
 
-        // Add an event listener to the "Delete project" button.
+
         deleteProjectButton.addClickListener(e -> {
             selectedProject = (Project) stripedGridProjects.asSingleSelect().getValue();
             if (stripedGridProjects.getSelectedItems().isEmpty()) {
                 Notification.show("No project selected", 3000, Notification.Position.MIDDLE);
             } else {
-
                 sampleProjectService.deleteProject(selectedProject.getId());
                 descriptionTextField.clear();
                 titleTextField.clear();
@@ -830,7 +734,7 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                             .map(Variants::getVariant_content)
                             .collect(Collectors.toList()));
                     stripedGridProjects.getDataProvider().refreshItem(projectToUpdate);
-                    // Выбираем обновленный проект
+
                     stripedGridProjects.asSingleSelect().setValue(projectToUpdate);
                     Notification notification = new Notification("Project " + projectToUpdate.getTitle() + " updated", 3000);
                     notification.setPosition(Notification.Position.MIDDLE);
@@ -862,7 +766,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
                 pasteArticlesButton.setEnabled(true);
             }
         });
-
 
     }
 
@@ -942,13 +845,12 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         grid.setColumns("title", "description");
 
         grid.getColumnByKey("description")
-                .setWidth("35%"); // Set the width of the "title" column to 25%
+                .setWidth("35%");
     }
 
 
     public void setSelectedProject(Project project) {
         if (project == null) {
-//            throw new IllegalArgumentException("Cannot set selectedProject to null");
             System.out.println("Cannot set selectedProject to null");
         }
         this.selectedProject = project;
@@ -984,31 +886,25 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
         try {
             URL websiteUrl = new URL(url);
             URLConnection connection = websiteUrl.openConnection();
-            connection.setConnectTimeout(3000); // Set a timeout of 3 seconds
-            connection.setReadTimeout(3000); // Set a timeout of 3 seconds
+            connection.setConnectTimeout(3000);
+            connection.setReadTimeout(3000);
             connection.connect();
             return true;
         } catch (Exception e) {
-            // Handle the exception or log the error
             return false;
         }
     }
 
     private void sendUpdatePost(String ipForREST, Project selectedProject, String fileExtension) {
         try {
-            // Create a new PostData object with the lists you want to send
             PostData postData = new PostData(selectedProject, fileExtension);
 
             URL url = new URL(ipForREST + "/project?update");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
-
-            // Convert your data to JSON
             Gson gson = new Gson();
             String json = gson.toJson(postData);
-
-            // Send POST request
             connection.setRequestProperty("Content-Type", "application/json");
             connection.getOutputStream().write(json.getBytes("UTF-8"));
 
@@ -1033,22 +929,17 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
-
-            // Convert your data to JSON
             HashMap<String, String> data = new HashMap<>();
             data.put("title", selectedProject.getTitle());
             data.put("userAgent", Operations.userAgent);
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
-
-            // Send POST request
             connection.setRequestProperty("Content-Type", "application/json");
             connection.getOutputStream().write(json.getBytes("UTF-8"));
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Read response from the server
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
                 StringBuffer response = new StringBuffer();
@@ -1074,24 +965,19 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
 
     private void sendPausePost(String ipForREST, Project selectedProject) {
         try {
-
             URL url = new URL(ipForREST + "/project?pause");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             String sendedData = selectedProject.getTitle().toString();
-
-            // Convert your data to JSON
             Gson gson = new Gson();
             String json = gson.toJson(sendedData);
 
-            // Send POST request
             connection.setRequestProperty("Content-Type", "application/json");
             connection.getOutputStream().write(json.getBytes("UTF-8"));
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Read response from the server
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
                 StringBuffer response = new StringBuffer();
@@ -1125,17 +1011,14 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             Map<String, String> dataMap = new HashMap<>();
             dataMap.put("title", sendedData);
 
-            // Convert your data to JSON
             Gson gson = new Gson();
             String json = gson.toJson(dataMap);
 
-            // Send POST request
             connection.setRequestProperty("Content-Type", "application/json");
             connection.getOutputStream().write(json.getBytes("UTF-8"));
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Read response from the server
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
                 StringBuffer response = new StringBuffer();
@@ -1157,17 +1040,6 @@ public class ProjectsView extends Composite<VerticalLayout> implements BeforeEnt
             e.printStackTrace();
         }
 
-
-
-
-
-
-
-
-
-
     }
-
-
 
 }

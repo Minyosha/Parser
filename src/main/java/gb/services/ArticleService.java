@@ -32,6 +32,4 @@ public class ArticleService {
     public void save(Article article) {
         articleRepository.save(article);
     }
-
-    // Дополнительные методы обработки бизнес-логики для Article
 }

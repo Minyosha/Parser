@@ -50,7 +50,7 @@ public class RegisterView extends VerticalLayout {
         });
         registerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        add(new H1(registerText),usernameField, nameField, emailField, passwordField, registerButton, loginButton);
+        add(new H1(registerText), usernameField, nameField, emailField, passwordField, registerButton, loginButton);
     }
 
     @Transactional
@@ -80,11 +80,10 @@ public class RegisterView extends VerticalLayout {
         newUser.setEmail(email);
         newUser.setName(name);
         newUser.setHashedPassword(passwordEncoder.encode(password));
-        newUser.setRoles(Set.of(Role.USER)); // или любую другую роль по умолчанию
+        newUser.setRoles(Set.of(Role.USER));
         newUser.setBanned(false);
         userRepository.save(newUser);
 
-        // После успешной регистрации перенаправляем на страницу успеха
         UI currentUI = UI.getCurrent();
         if (currentUI != null) {
             currentUI.navigate("regsuccess");

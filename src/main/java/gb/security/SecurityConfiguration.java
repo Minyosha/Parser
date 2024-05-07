@@ -20,7 +20,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     }
 
 
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
@@ -28,13 +27,12 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                 authorize -> authorize
                         .requestMatchers(new AntPathRequestMatcher("/login"))
                         .permitAll()
-                        .requestMatchers("/resources/download/**").permitAll() // разрешаем доступ к ресурсам
+                        .requestMatchers("/resources/download/**").permitAll()
         );
 
         super.configure(http);
         setLoginView(http, LoginView.class);
     }
-
 
 
 }

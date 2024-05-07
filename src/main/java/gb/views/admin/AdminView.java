@@ -58,10 +58,9 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
     private AbstractGridSingleSelectionModel<Object> stripedGridUsers;
 
     public AdminView(AuthenticatedUser authenticatedUser) {
-        this.authenticatedUser = authenticatedUser; // Set the authenticated user
+        this.authenticatedUser = authenticatedUser;
         this.userService = userService;
 
-        // Create the text fields
         TextField idTextField = new TextField("id");
         idTextField.setReadOnly(true);
         TextField usernameTextField = new TextField("Username");
@@ -70,7 +69,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         rolesTextField.setReadOnly(true);
         TextField emailTextField = new TextField("E-mail");
 
-        // Create headings
         H5 h5UserDetails = new H5();
         h5UserDetails.setText("User details:");
         H5 h5Users = new H5();
@@ -78,17 +76,14 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         H5 h5UserProjects = new H5();
         h5UserProjects.setText("Select user to show his projects");
 
-        // Create the primary button
         Button updateUserButton = new Button("Update user");
         updateUserButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         updateUserButton.setWidth("192px");
 
-        // Create the secondary button
         Button deleteUserButton = new Button("Delete user");
         deleteUserButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         deleteUserButton.setWidth("192px");
 
-        // Create Radio buttons
         RadioButtonGroup bannedRadioGroup = new RadioButtonGroup();
         bannedRadioGroup.setLabel("Banned?");
         bannedRadioGroup.setWidth("100%");
@@ -96,7 +91,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         bannedRadioGroup.setItems("Yes", "No");
         bannedRadioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
 
-        // Create the grid, set it to take full height and full width
         Grid<User> stripedGridUsers = new Grid<>(User.class);
         stripedGridUsers.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         stripedGridUsers.setHeightFull();
@@ -107,15 +101,13 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         stripedGridUserProjects.setHeightFull();
         stripedGridUserProjects.setWidthFull();
 
-        // Create a column layout for the text fields and buttons
         VerticalLayout layoutColumnLeft = new VerticalLayout();
-        layoutColumnLeft.setWidth(null); // Width is determined by the widest component
+        layoutColumnLeft.setWidth(null);
         layoutColumnLeft.add(h5UserDetails, idTextField, bannedRadioGroup, usernameTextField, nameTextField, rolesTextField, emailTextField, updateUserButton, deleteUserButton);
         layoutColumnLeft.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
 
-        // Create a column layout for tables
         VerticalLayout layoutColumnRight = new VerticalLayout();
-        layoutColumnRight.setWidth(null); // Width is determined by the widest component
+        layoutColumnRight.setWidth(null);
         layoutColumnRight.add(h5Users, stripedGridUsers, h5UserProjects, stripedGridUserProjects);
         layoutColumnRight.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
 
@@ -134,34 +126,29 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 h5UserProjects.add(selectedUser.getUsername() + " projects:");
             } else {
                 idTextField.clear();
-                stripedGridUserProjects.setItems(Collections.emptyList()); // Clear the grid if no user is selected
+                stripedGridUserProjects.setItems(Collections.emptyList());
             }
         });
-
 
 
         updateUserButton.addClickListener(event -> {
             User selectedUser = stripedGridUsers.asSingleSelect().getValue();
             if (selectedUser != null) {
-                // Получение последней версии пользователя из базы данных
                 User userToUpdate = userService.findById(selectedUser.getId());
                 if (userToUpdate != null) {
-                    // Обновление данных пользователя
                     userToUpdate.setUsername(usernameTextField.getValue());
                     userToUpdate.setName(nameTextField.getValue());
                     userToUpdate.setEmail(emailTextField.getValue());
                     userToUpdate.setBanned("Yes".equals(bannedRadioGroup.getValue()));
-
-                    // Сохранение обновленных данных пользователя
                     userService.update(userToUpdate);
-
-                    // Обновление таблицы
                     stripedGridUsers.getDataProvider().refreshItem(userToUpdate);
                     Notification notification = new Notification("User " + userToUpdate.getUsername() + " updated", 3000);
                     notification.setPosition(Notification.Position.MIDDLE);
                     notification.open();
                 } else {
-                    // Пользователь не найден, обработка ошибки
+                    Notification notification = new Notification("User no found", 3000);
+                    notification.setPosition(Notification.Position.MIDDLE);
+                    notification.open();
                 }
             }
         });
@@ -169,48 +156,38 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
 
         deleteUserButton.addClickListener(event -> {
             User selectedUser = stripedGridUsers.asSingleSelect().getValue();
-
-            // Идентификатор текущего пользователя
-            Long currentUserId = getCurrentUserId(); // Замените этот метод на ваш способ получения ID текущего пользователя
+            Long currentUserId = getCurrentUserId();
 
             if (selectedUser != null) {
                 if (selectedUser.getId().equals(currentUserId)) {
-                    // Попытка удаления самого себя, отображаем уведомление
                     Notification notification = new Notification("You cannot delete your own account", 3000);
                     notification.setPosition(Notification.Position.MIDDLE);
                     notification.open();
                 } else {
-                    // Получение последней версии пользователя из базы данных
                     User userToDelete = userService.findById(selectedUser.getId());
                     if (userToDelete != null) {
-                        // Удаление пользователя
                         userService.delete(userToDelete.getId());
-                        // Обновление таблицы
                         stripedGridUsers.getDataProvider().refreshAll();
                         Notification notification = new Notification("User " + userToDelete.getUsername() + " deleted", 3000);
                         notification.setPosition(Notification.Position.MIDDLE);
                         notification.open();
                     } else {
-                        // Пользователь не найден, обработка ошибки
                         Notification notification = new Notification("User with ID " + selectedUser.getId() + " not found", 3000);
                     }
                 }
             }
         });
 
-        // Create a row layout, add the column layout and the grid to it
         HorizontalLayout layoutRow = new HorizontalLayout();
         layoutRow.setHeightFull();
         layoutRow.setWidthFull();
         layoutRow.add(layoutColumnLeft, layoutColumnRight);
-        layoutRow.setFlexGrow(0, layoutColumnLeft); // Column layout does not grow
-        layoutRow.setFlexGrow(1, layoutColumnRight); // Grid takes the remaining space
-
-        // Ensure the button column doesn't grow and the grid takes the remaining space
         layoutRow.setFlexGrow(0, layoutColumnLeft);
         layoutRow.setFlexGrow(1, layoutColumnRight);
 
-        // Configure the content layout, add the row layout to it, and set it to take full size
+        layoutRow.setFlexGrow(0, layoutColumnLeft);
+        layoutRow.setFlexGrow(1, layoutColumnRight);
+
         getContent().setSizeFull();
         getContent().add(layoutRow);
         getContent().setFlexGrow(1, layoutRow);
@@ -219,7 +196,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
         getContent().getStyle().set("flex-grow", "1");
         getContent().setWidth("100%");
 
-        // Populate the grid with data
         setGridUserData(stripedGridUsers);
         setGridProjectDataForSelectedUser(stripedGridUserProjects, getCurrentUserId());
     }
@@ -239,7 +215,6 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
 
 
     private void setGridUserData(Grid<User> grid) {
-        // Initialize filterValues with empty strings for each column
         grid.getColumns().forEach(column -> filterValues.add(""));
 
         grid.setItems(query -> userService.list(
@@ -247,11 +222,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 .stream());
 
         grid.setColumns("id", "banned", "username", "name", "roles", "email");
-
-        // Create a header row for filters
         HeaderRow filterRow = grid.appendHeaderRow();
-
-        // Create a filter field for each column and add a value change listener
         for (Grid.Column<User> column : grid.getColumns()) {
             if ("id".equals(column.getKey())) {
                 TextField idField = new TextField();
@@ -261,7 +232,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                     if (!newValue.matches("\\d*")) {
                         idField.setValue(newValue.replaceAll("[^\\d]", ""));
                     }
-                    filterValues.set(grid.getColumns().indexOf(column), idField.getValue()); // Save the filter value
+                    filterValues.set(grid.getColumns().indexOf(column), idField.getValue());
                     grid.setItems(query -> userService.filteredList(
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
@@ -281,7 +252,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 filterComboBox.setClearButtonVisible(true);
                 filterComboBox.addValueChangeListener(event -> {
                     String selectedValue = filterComboBox.getValue() != null ? filterComboBox.getValue() : "";
-                    filterValues.set(grid.getColumns().indexOf(column), selectedValue); // Save the filter value
+                    filterValues.set(grid.getColumns().indexOf(column), selectedValue);
                     grid.setItems(query -> userService.filteredList(
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
@@ -293,7 +264,7 @@ public class AdminView extends Composite<VerticalLayout> implements BeforeEnterO
                 TextField filterField = new TextField();
                 filterField.setValueChangeMode(ValueChangeMode.EAGER);
                 filterField.addValueChangeListener(event -> {
-                    filterValues.set(grid.getColumns().indexOf(column), filterField.getValue()); // Save the filter value
+                    filterValues.set(grid.getColumns().indexOf(column), filterField.getValue());
                     grid.setItems(query -> userService.filteredList(
                                     filterValues,
                                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))

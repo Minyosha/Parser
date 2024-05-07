@@ -7,9 +7,6 @@ import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -17,12 +14,6 @@ import java.util.Set;
 
 public class Operations {
     static String currentArticle;
-    public static String currentAdress;
-
-    private static int counter = 0;
-    private static int downloaded = 0;
-    private static double percentage = 0;
-
     private static String getHtmlStartSearch;
     private static String getHtmlStartSearchOffset;
     private static String getHtmlEndSearch;
@@ -155,20 +146,18 @@ public class Operations {
     }
 
     private static String getHtml(String url, String userAgent) {
-//        System.out.println(userAgent);
         try {
-            // Установка таймаута для HttpURLConnection
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("HEAD");
-            connection.setConnectTimeout(5000); // Таймаут соединения в миллисекундах
-            connection.setReadTimeout(5000); // Таймаут чтения в миллисекундах
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
             int responseCode = connection.getResponseCode();
 
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 // Установка таймаута и User-Agent для Jsoup
                 Document doc = Jsoup.connect(url)
-                        .timeout(5000) // Таймаут в миллисекундах
-                        .userAgent(userAgent) // Использование User-Agent текущего пользователя
+                        .timeout(5000)
+                        .userAgent(userAgent)
                         .get();
                 String html = doc.html();
                 return html;
@@ -180,27 +169,6 @@ public class Operations {
             return null;
         }
     }
-
-
-//    private static void downloadImage(String imageLink, String articleNumber) {
-//        try {
-//            URL url = new URL(imageLink);
-//            Path directoryPath = Path.of(DOWNLOAD_DIRECTORY);
-//            if (!Files.exists(directoryPath)) {
-//                Files.createDirectory(directoryPath);
-//            }
-//            String fileName = articleNumber + ".zip";
-//            Path filePath = directoryPath.resolve(fileName);
-//            Files.copy(url.openStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//            downloaded = downloaded + 1;
-//
-//        } catch (IOException e) {
-//            // Обработка исключения
-//            System.out.println("Article number: " + articleNumber);
-//            e.printStackTrace();
-//        }
-//    }
-
 
 
 }

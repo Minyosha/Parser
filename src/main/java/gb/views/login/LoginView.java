@@ -71,7 +71,6 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
             } else {
                 event.forwardTo("about-view");
             }
-
         } else {
             if (event.getLocation().getQueryParameters().getParameters().containsKey("error")) {
                 login.setError(true);

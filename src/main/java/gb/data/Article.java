@@ -33,7 +33,6 @@ public class Article {
         this.article_content = article_content;
         this.project = project;
     }
-// геттеры, сеттеры и т.д.
 
     public Long getId() {
         return id;

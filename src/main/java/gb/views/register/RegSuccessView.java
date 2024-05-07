@@ -20,7 +20,6 @@ public class RegSuccessView extends VerticalLayout {
         H2 redirectMessage = new H2("Redirecting to the login page...");
         add(successMessage, redirectMessage);
 
-        // Автоматическое перенаправление на страницу входа через 3 секунды
         UI.getCurrent().getPage().executeJs("setTimeout(function() {window.location.href='login'}, 3000);");
     }
 }

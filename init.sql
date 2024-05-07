@@ -1,16 +1,22 @@
-CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(255) NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role VARCHAR(255) NOT NULL,
-  tokens INT NOT NULL,
-  banned BOOLEAN NOT NULL,
-  email VARCHAR(255) NOT NULL
-);
-
-INSERT INTO users (username, password, role, tokens, banned, email) VALUES
-('user1', '$2a$12$g3MpPVpTlhFMYuduRmeoDeEpDKVzOCF4xWIbyEWZRctpAT.SpnY1G', 'admin', 10, FALSE, 'user1@example.com'),
-('user2', '$2a$12$E8EYMDKhHsmzH36IlgUxd.jJh2GIl1sR5Fpx3b/Noq6/aINSxuGJu', 'user', 20, FALSE, 'user2@example.com'),
-('user3', '$2a$12$zbdoppMBtgbV/WQNKWiww.VZkOOPmU9.per52YuP03SCpdB5.encC', 'user', 30, TRUE, 'user3@example.com');
-
---pass 1234
+--SET search_path TO public;
+--CREATE TABLE application_user (
+--    id SERIAL PRIMARY KEY, -- Assuming AbstractEntity has an 'id' field of type SERIAL
+--    username VARCHAR(255) NOT NULL,
+--    name VARCHAR(255),
+--    hashed_password VARCHAR(255), -- Assuming this is how you want to store the hashed password
+--    banned BOOLEAN NOT NULL DEFAULT FALSE,
+--    email VARCHAR(255) -- Assuming email is not a required field, otherwise add NOT NULL
+--);
+--CREATE TABLE user_roles (
+--    user_id INT NOT NULL,
+--    role VARCHAR(255) NOT NULL,
+--    CONSTRAINT fk_user
+--        FOREIGN KEY(user_id)
+--        REFERENCES application_user(id),
+--    CONSTRAINT user_roles_pkey
+--        PRIMARY KEY (user_id, role)
+--);
+--insert into application_user (version, id, username, name, email, banned, hashed_password) values (1, '1','user','John Normal','john@mail.com', false, '$2a$10$xdbKoM48VySZqVSU/cSlVeJn0Z04XCZ7KZBjUBC00eKo5uLswyOpe')
+--insert into user_roles (user_id, roles) values ('1', 'USER')
+--insert into application_user (version, id, username, name, email, banned, hashed_password) values (1, '2','admin','Emma Executive','emma@mail.com', false, '$2a$10$jpLNVNeA7Ar/ZQ2DKbKCm.MuT2ESe.Qop96jipKMq7RaUgCoQedV.')
+--insert into user_roles (user_id, roles) values ('2', 'ADMIN')

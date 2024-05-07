@@ -14,6 +14,7 @@ import gb.data.User;
 import gb.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.security.SecureRandom;
 
 @Route("forgot-password")
@@ -56,7 +57,7 @@ public class ForgotPasswordView extends VerticalLayout {
             notification.open();
             return;
         }
-//         ads@123.ru
+
         if (userRepository.existsByEmail(email)) {
             PasswordEncoder passwordEncoder;
             passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();

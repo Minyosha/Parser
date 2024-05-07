@@ -6,13 +6,10 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.charts.model.Label;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -22,13 +19,6 @@ import gb.data.User;
 import gb.security.AuthenticatedUser;
 import gb.views.MainLayout;
 import jakarta.annotation.security.RolesAllowed;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
-import javax.swing.text.html.HTML;
-import java.io.*;
-
 
 
 @PageTitle("About")
@@ -46,10 +36,8 @@ public class AboutView extends Composite<VerticalLayout> implements BeforeEnterO
 
         VerticalLayout layout = new VerticalLayout();
 
-        // Заголовок
         Html header = new Html("<h4>О проекте Parser</h4>");
 
-        // Описание с переносами строк
         Html description = new Html("<div>Этот проект используется для скачивания файлов с сайтов используя поиск ссылок по шаблону, заданному пользователем.<br>"
                 + "Для тестирования доступны два заранее созданных пользователя: <b>user</b> и <b>admin</b> с паролями <b>user</b> и <b>admin</b>.<br>" +
                 "Пользователи могут создавать и запускать свои проекты, администраторы могут банить и удалять пользователей а так же просматривать их проекты.<br>" +
@@ -123,7 +111,6 @@ public class AboutView extends Composite<VerticalLayout> implements BeforeEnterO
             notification.setPosition(Notification.Position.MIDDLE);
             notification.open();
         });
-
 
 
         layout.add(header, description, recommended, params, getArticles, getVariants, getStartSearch, getEndSearch);
